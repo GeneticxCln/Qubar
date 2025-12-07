@@ -1,64 +1,144 @@
-# Qubar 
+# Qubar - Hyprland Desktop Environment
 
-A powerful, feature-rich QuickShell configuration for Hyprland featuring a browser-style tab bar, settings panel, app launcher, and desktop overview.
-
-![Platform](https://img.shields.io/badge/Platform-Linux-blue)
-![Compositor](https://img.shields.io/badge/Compositor-Hyprland-green)
-![Framework](https://img.shields.io/badge/Framework-QuickShell-purple)
+Complete QuickShell-based desktop environment for Hyprland with advanced features.
 
 ## ✨ Features
 
-- 🌐 **Browser-Style Tab Bar** - Window tabs with close button and visual feedback
-- 🖥️ **Desktop Overview** - 5x2 workspace grid with window previews
-- 🚀 **App Launcher** - Fast application search and launch
-- ⚙️ **Settings Panel** - Audio, display, network, bluetooth, power, and fan control
-- 🌀 **Fan Control** - NCT67xx-based hardware fan management
-- ⌨️ **Global Shortcuts** - Super for launcher, Super+Tab for overview
-- ✨ **Material Design** - Ripple effects and smooth animations
+### Core Components
+- **Top Tab Bar**: Browser-style window tabs, workspace switcher, system tray
+- **Settings Panel**: Audio, Display, Network, Bluetooth, Power, Fan Control
+- **App Launcher**: Desktop app search and launch
+- **Desktop Overview**: Activities-style workspace grid with search
+- **Notification Center**: System notifications with DND mode
+- **Media Controls**: MPRIS media player widget
 
-## 📦 Installation
+### Hyprland Integration
+- **Rainbow Border Gradients**: 7-color RGB gradient on active windows
+- **Smooth Animations**: Window open/close, workspace switching, fade effects
+- **Auto-start**: QuickShell launches automatically
+- **Global Shortcuts**: Super, Super+Tab for launcher and overview
 
+## 🚀 Installation
+
+### Prerequisites
 ```bash
-git clone https://github.com/YOUR_USERNAME/Qubar.git ~/.config/quickshell
+# Core dependencies
+sudo pacman -S hyprland quickshell qt6-declarative
+
+# System tools
+sudo pacman -S wpctl brightnessctl networkmanager bluez-utils playerctl
+
+# Optional (for screenshots & notifications)
+sudo pacman -S hyprshot dunst
 ```
 
-## 🎮 Usage
-
+### Setup
+1. Clone the repository:
 ```bash
-quickshell
+git clone https://github.com/GeneticxCln/Qubar.git
+cd Qubar
 ```
 
-### Keyboard Shortcuts
-| Shortcut | Action |
-|----------|--------|
-| Super | Toggle App Launcher |
-| Super+Tab | Toggle Desktop Overview |
-| Click System Tray | Open Settings Panel |
-| Click Start Button | Open App Launcher |
+2. Install QuickShell config:
+```bash
+mkdir -p ~/.config/quickshell
+cp -r * ~/.config/quickshell/
+```
 
-## 📁 Structure
+3. Install Hyprland config:
+```bash
+cp hyprland.conf ~/.config/hypr/hyprland.conf
+```
+
+4. Launch Hyprland:
+```bash
+Hyprland
+```
+
+## ⚙️ Configuration
+
+### Hyprland Settings
+Edit `~/.config/hypr/hyprland.conf`:
+- **Rainbow borders**: Modify `col.active_border` in `general` section
+- **Animations**: Adjust bezier curves and animation speeds
+- **Keybindings**: Customize under `KEYBINDINGS` section
+
+### QuickShell Theme
+Edit `~/.config/quickshell/theme/Theme.qml`:
+- Colors, fonts, sizes
+
+### Fan Control (Optional)
+Requires passwordless sudo for `/usr/bin/tee`:
+```bash
+sudo visudo
+# Add: yourusername ALL=(ALL) NOPASSWD: /usr/bin/tee
+```
+
+## 📁 Project Structure
 
 ```
-~/.config/quickshell/
+Qubar/
+├── backend/                 # Backend controllers
+│   ├── HyprlandIPC.qml     # Hyprland socket communication
+│   ├── BackendController.qml
+│   ├── AppLauncher.qml
+│   ├── MediaController.qml
+│   ├── NotificationController.qml
+│   ├── IconProvider.qml
+│   └── settings/           # System settings controllers
+├── topbar/                 # Top bar UI
+│   └── widgets/
+├── panel/                  # Popup panels
+│   ├── SettingsPanel.qml
+│   ├── NotificationPanel.qml
+│   └── widgets/
+├── launcher/               # App launcher
+├── overview/               # Desktop overview
+├── theme/                  # Theme singleton
 ├── shell.qml              # Entry point
-├── theme/                 # Styling
-├── backend/               # Controllers & IPC
-│   ├── settings/         # System controllers
-│   └── models/           # Data models
-├── topbar/               # Tab bar UI
-├── panel/                # Settings popup
-├── launcher/             # App launcher
-└── overview/             # Workspace grid
+└── hyprland.conf          # Hyprland configuration
 ```
 
-## 🔧 Requirements
+## 🎨 Features Showcase
 
-- Hyprland
-- QuickShell
-- wpctl, brightnessctl, nmcli (for settings)
-- nct6775 module (for fan control)
+### Rainbow Borders
+7-color gradient on active windows:
+- Red → Orange → Yellow → Green → Blue → Indigo → Violet
 
-## 📄 License
+### Window Animations
+- **Open/Close**: Scale + fade with overshoot
+- **Workspace Switch**: Smooth slide
+- **Border**: Rotating rainbow gradient
 
-MIT
+### Media Player
+- Album art display
+- Play/pause/next/previous controls
+- Track progress bar
 
+### Notification Center
+- Bell icon with unread badge
+- Slide-in panel from top-right
+- Clear all & DND toggle
+
+## 🔧 Troubleshooting
+
+**QuickShell not starting:**
+```bash
+quickshell -l  # Check logs
+```
+
+**Fan control not working:**
+- Verify passwordless sudo for `/usr/bin/tee`
+- Check hwmon device detection
+
+**Notifications not appearing:**
+- Ensure `dunst` or `swaync` is running
+
+## 📝 License
+
+MIT License - See LICENSE file
+
+## 🙏 Credits
+
+- Built with [QuickShell](https://github.com/outfoxxed/quickshell)
+- Designed for [Hyprland](https://hyprland.org)
