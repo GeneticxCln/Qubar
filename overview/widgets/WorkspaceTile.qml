@@ -7,6 +7,7 @@ Rectangle {
     id: workspaceTile
     
     // Properties
+    required property var backend
     required property int workspaceId
     required property var windows // Array of window objects
     required property bool active
@@ -58,17 +59,31 @@ Rectangle {
                     spacing: 4
                     
                     // Icon
-                    Rectangle {
+                    Item {
                         Layout.alignment: Qt.AlignHCenter
                         width: 24
                         height: 24
-                        color: Theme.accent
-                        radius: 12
                         
-                        Text {
-                            anchors.centerIn: parent
-                            text: modelData.appId ? modelData.appId.charAt(0).toUpperCase() : "?"
-                            font.pixelSize: 12
+                        Image {
+                            anchors.fill: parent
+                            source: backend.icons.getIcon(modelData.class || modelData.appId, 24) || ""
+                            visible: source != ""
+                            asynchronous: true
+                            fillMode: Image.PreserveAspectFit
+                        }
+                        
+                        // Fallback
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 12
+                            color: Theme.accent
+                            visible: !parent.children[0].visible
+                            
+                            Text {
+                                anchors.centerIn: parent
+                                text: modelData.appId ? modelData.appId.charAt(0).toUpperCase() : "?"
+                                font.pixelSize: 12
+                            }
                         }
                     }
                     

@@ -12,6 +12,7 @@ RowLayout {
     property var sysInfo: backend.systemInfoData
     
     signal settingsClicked()
+    signal notificationClicked()
     
     // Interaction for whole tray
     TapHandler {
@@ -19,6 +20,67 @@ RowLayout {
     }
     
     // ═══════════════════════════════════════════════════════════
+    
+    
+    // ═══════════════════════════════════════════════════════════
+    // NOTIFICATION BELL
+    // ═══════════════════════════════════════════════════════════
+    Rectangle {
+        color: bellHover.hovered ? Theme.tabHover : "transparent"
+        radius: 4
+        implicitWidth: 48
+        implicitHeight: Theme.barHeight - 12
+        Layout.alignment: Qt.AlignVCenter
+        
+        Behavior on color { ColorAnimation { duration: 150 } }
+        
+        Item {
+            anchors.centerIn: parent
+            width: 24
+            height: 24
+            
+            Text {
+                anchors.centerIn: parent
+                text: "🔔"
+                font.pixelSize: 16
+                opacity: backend.notifications.notifications.length > 0 ? 1.0 : 0.5
+            }
+            
+            // Unread badge
+            Rectangle {
+                visible: backend.notifications.unreadCount > 0
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.rightMargin: -4
+                anchors.topMargin: -4
+                width: Math.max(16, badgeText.width + 6)
+                height: 16
+                radius: 8
+                color: Theme.accent
+                
+                Text {
+                    id: badgeText
+                    anchors.centerIn: parent
+                    text: backend.notifications.unreadCount > 99 ? "99+" : backend.notifications.unreadCount
+                    color: "#000"
+                    font.pixelSize: 9
+                    font.bold: true
+                }
+            }
+        }
+        
+        HoverHandler { 
+            id: bellHover
+            cursorShape: Qt.PointingHandCursor 
+        }
+        
+        TapHandler {
+            onTapped: {
+                systemTrayWidget.notificationClicked()
+                mouse.accepted = true
+            }
+        }
+    }
     
     // ═══════════════════════════════════════════════════════════
     // NETWORK

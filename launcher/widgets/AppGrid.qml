@@ -21,6 +21,7 @@ GridView {
     // Delegate
     delegate: AppItem {
         appData: modelData
+        backend: appGrid.backend // Pass backend down
         
         onLaunched: {
             backend.launcher.launch(modelData)

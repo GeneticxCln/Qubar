@@ -131,6 +131,15 @@ PopupWindow {
         
         // Separator
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.textDim; opacity: 0.2 }
+
+        // 3. MEDIA CONTROL
+        MediaPlayerWidget {
+            Layout.fillWidth: true
+            backend: settingsPanel.backend
+        }
+        
+        // Separator
+        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.textDim; opacity: 0.2 }
         
         // 3. FAN CONTROL
         FanControlWidget {

@@ -67,6 +67,7 @@ PanelWindow {
         SystemTrayWidget {
             backend: topBar.backend
             onSettingsClicked: settingsPanel.visible = !settingsPanel.visible // Toggle
+            onNotificationClicked: notificationPanel.visible = !notificationPanel.visible // Toggle
         }
     }
     
@@ -103,6 +104,18 @@ PanelWindow {
     }
     
     property var launcherPanel: launcherLoader.item
+    
+    // Notification Panel Popup
+    Loader {
+        id: notificationLoader
+        active: true
+        source: "../panel/NotificationPanel.qml"
+        onLoaded: {
+            item.backend = topBar.backend
+        }
+    }
+    
+    property var notificationPanel: notificationLoader.item
     
     Component.onCompleted: {
         console.log("[TopBar] Loaded")

@@ -109,6 +109,7 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     
+                    backend: overviewPanel.backend // Pass backend down
                     property int wsId: index + 1
                     workspaceId: wsId
                     windows: backend.overview.workspaceWindows[wsId] || []

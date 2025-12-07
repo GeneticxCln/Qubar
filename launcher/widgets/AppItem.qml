@@ -7,6 +7,7 @@ Rectangle {
     id: appItem
     
     // Properties
+    required property var backend
     property var appData // {name, icon, desktopFile, ...}
     property bool selected: false
     
@@ -24,20 +25,44 @@ Rectangle {
         anchors.centerIn: parent
         spacing: 8
         
-        // Icon (Placeholder using Rectangle + Text if no image loader capable of icon theme)
-        // In a real scenario, use Quickshell's image provider or a dedicated Icon component
-        Rectangle {
+        // Icon
+        Item {
             Layout.alignment: Qt.AlignHCenter
             width: 48
             height: 48
-            radius: 8
-            color: Theme.accent
             
-            Text {
-                anchors.centerIn: parent
-                text: appData && appData.name ? appData.name.charAt(0).toUpperCase() : "?"
-                font.pixelSize: 24
-                color: "#000"
+            // Access qubar global (assuming it's available or passed down)
+            // Ideally we pass backend.icons to it.
+            // For now, let's assume 'launcherPanel' (parent's parent...) has backend access
+            // Or use the `qubar` global if exposed.
+            // Since we don't have a clean global 'qubar', we rely on `appItem.backend` 
+            // which should be passed from Grid -> LauncherPanel -> Backend -> Icons
+            
+            // Let's add `required property var backend` to AppItem 
+            
+            Image {
+                anchors.fill: parent
+                source: backend.icons.getIcon(appData.icon, 48) || ""
+                visible: source != ""
+                asynchronous: true
+                fillMode: Image.PreserveAspectFit
+                
+                onStatusChanged: if (status == Image.Error) visible = false
+            }
+            
+            // Fallback
+            Rectangle {
+                anchors.fill: parent
+                radius: 8
+                color: Theme.accent
+                visible: !parent.children[0].visible // Show if image invalid
+                
+                Text {
+                    anchors.centerIn: parent
+                    text: appData && appData.name ? appData.name.charAt(0).toUpperCase() : "?"
+                    font.pixelSize: 24
+                    color: "#000"
+                }
             }
         }
         
