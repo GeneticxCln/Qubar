@@ -48,15 +48,26 @@ else
 fi
 
 # Copy SDDM configuration
-echo -e "${BLUE}[4/5] Configuring SDDM...${NC}"
+echo -e "${BLUE}[4/6] Configuring SDDM...${NC}"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cp "$SCRIPT_DIR/sddm.conf" /etc/sddm.conf.d/sddm.conf 2>/dev/null || {
     mkdir -p /etc/sddm.conf.d
     cp "$SCRIPT_DIR/sddm.conf" /etc/sddm.conf.d/sddm.conf
 }
 
+# Set initial wallpaper for SDDM
+echo -e "${BLUE}[5/6] Setting initial wallpaper...${NC}"
+if [ -d "$HOME/Qubar/wallpapers" ]; then
+    # Find a wallpaper to use as default
+    DEFAULT_WALLPAPER=$(find "$HOME/Qubar/wallpapers" -maxdepth 1 -type f \( -name "*.jpg" -o -name "*.png" \) | head -n 1)
+    if [ -n "$DEFAULT_WALLPAPER" ]; then
+        cp "$DEFAULT_WALLPAPER" /usr/share/sddm/themes/simple-sddm/background.jpg
+        echo -e "${GREEN}Initial wallpaper set${NC}"
+    fi
+fi
+
 # Enable SDDM service
-echo -e "${BLUE}[5/5] Enabling SDDM service...${NC}"
+echo -e "${BLUE}[6/6] Enabling SDDM service...${NC}"
 systemctl enable sddm.service
 
 echo ""
@@ -65,12 +76,16 @@ echo -e "${GREEN}  Simple SDDM Theme installed successfully!${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════${NC}"
 echo ""
 echo "Next steps:"
-echo "1. Customize the theme (optional):"
+echo "1. Wallpaper will sync automatically with desktop changes"
+echo "   Run: ~/Qubar/scripts/set-wallpaper.sh random"
+echo ""
+echo "2. Customize the theme (optional):"
 echo "   Edit: /usr/share/sddm/themes/simple-sddm/theme.conf"
 echo ""
-echo "2. Reboot to see the login screen:"
+echo "3. Reboot to see the login screen:"
 echo "   sudo reboot"
 echo ""
-echo "3. To test SDDM without rebooting:"
+echo "4. To test SDDM without rebooting:"
 echo "   sudo systemctl start sddm"
 echo ""
+

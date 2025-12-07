@@ -7,6 +7,8 @@
 WALLPAPER_DIR="$HOME/Qubar/wallpapers"
 CURRENT_LINK="$WALLPAPER_DIR/current.jpg"
 SWAYLOCK_CURRENT="$HOME/.config/swaylock/current_wallpaper.jpg"
+SDDM_THEME_DIR="/usr/share/sddm/themes/simple-sddm"
+SDDM_WALLPAPER="$SDDM_THEME_DIR/background.jpg"
 
 # Function to select random wallpaper
 select_random_wallpaper() {
@@ -32,6 +34,13 @@ set_wallpaper() {
     mkdir -p "$(dirname "$SWAYLOCK_CURRENT")"
     cp "$WALLPAPER" "$SWAYLOCK_CURRENT"
     
+    # Copy for SDDM theme (requires sudo)
+    if [ -d "$SDDM_THEME_DIR" ]; then
+        sudo cp "$WALLPAPER" "$SDDM_WALLPAPER" 2>/dev/null || {
+            echo "Warning: Could not update SDDM wallpaper (needs sudo)"
+        }
+    fi
+    
     # Reload hyprpaper if running
     if pgrep -x hyprpaper > /dev/null; then
         killall hyprpaper
@@ -53,3 +62,4 @@ else
     echo "Usage: $0 [random|/path/to/wallpaper.jpg]"
     exit 1
 fi
+
