@@ -17,6 +17,7 @@ Complete QuickShell-based desktop environment for Hyprland with advanced feature
 - **Smooth Animations**: Window open/close, workspace switching, fade effects
 - **Auto-start**: QuickShell launches automatically
 - **Global Shortcuts**: Super, Super+Tab for launcher and overview
+- **SDDM Login Manager**: Simple SDDM theme for elegant login screen
 
 ## 🚀 Installation
 
@@ -50,7 +51,12 @@ cp -r * ~/.config/quickshell/
 cp hyprland.conf ~/.config/hypr/hyprland.conf
 ```
 
-4. Launch Hyprland:
+4. Install SDDM login manager (optional but recommended):
+```bash
+sudo ./install-sddm-theme.sh
+```
+
+5. Launch Hyprland:
 ```bash
 Hyprland
 ```
