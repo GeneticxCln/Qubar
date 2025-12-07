@@ -3,6 +3,9 @@
 # ║            Custom lock screen for Qubar theme             ║
 # ╚═══════════════════════════════════════════════════════════╝
 
+# Wallpaper
+image=$HOME/.config/swaylock/current_wallpaper.jpg
+
 # Display
 daemonize
 show-failed-attempts

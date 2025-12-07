@@ -32,6 +32,9 @@ sudo pacman -S wpctl brightnessctl networkmanager bluez-utils playerctl
 # XDG Desktop Portal (for screen sharing, file pickers)
 sudo pacman -S xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
 
+# Wallpaper daemon
+sudo pacman -S hyprpaper
+
 # Screen locker
 sudo pacman -S swaylock-effects
 
