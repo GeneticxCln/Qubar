@@ -32,6 +32,9 @@ sudo pacman -S wpctl brightnessctl networkmanager bluez-utils playerctl
 # XDG Desktop Portal (for screen sharing, file pickers)
 sudo pacman -S xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
 
+# Screen locker
+sudo pacman -S swaylock-effects
+
 # Optional (for screenshots & notifications)
 sudo pacman -S hyprshot dunst
 ```
@@ -54,13 +57,19 @@ cp -r * ~/.config/quickshell/
 cp hyprland.conf ~/.config/hypr/hyprland.conf
 ```
 
-4. Install XDG portal config:
+45. Install XDG portal config:
 ```bash
 mkdir -p ~/.config/xdg-desktop-portal
 cp .config/xdg-desktop-portal/hyprland-portals.conf ~/.config/xdg-desktop-portal/
 ```
 
-5. Install SDDM login manager (optional but recommended):
+6. Install swaylock config:
+```bash
+mkdir -p ~/.config/swaylock
+cp .config/swaylock/config ~/.config/swaylock/
+```
+
+7. Install SDDM login manager (optional but recommended):
 ```bash
 sudo ./install-sddm-theme.sh
 ```

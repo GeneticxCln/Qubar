@@ -1,0 +1,62 @@
+# ╔═══════════════════════════════════════════════════════════╗
+# ║                 QUBAR SWAYLOCK CONFIG                     ║
+# ║            Custom lock screen for Qubar theme             ║
+# ╚═══════════════════════════════════════════════════════════╝
+
+# Display
+daemonize
+show-failed-attempts
+show-keyboard-layout
+ignore-empty-password
+
+# Clock
+clock
+timestr=%H:%M
+datestr=%A, %B %d
+
+# Colors (matching Qubar theme)
+color=0a0a0a
+bs-hl-color=ff6b6b
+caps-lock-bs-hl-color=ff6b6b
+caps-lock-key-hl-color=a8dadc
+inside-color=1a1a1a
+inside-clear-color=1a1a1a
+inside-caps-lock-color=1a1a1a
+inside-ver-color=1a1a1a
+inside-wrong-color=1a1a1a
+key-hl-color=a8dadc
+layout-bg-color=0a0a0a
+layout-border-color=a8dadc
+layout-text-color=f1faee
+line-color=0a0a0a
+line-clear-color=0a0a0a
+line-caps-lock-color=0a0a0a
+line-ver-color=0a0a0a
+line-wrong-color=0a0a0a
+ring-color=457b9d
+ring-clear-color=a8dadc
+ring-caps-lock-color=f1c40f
+ring-ver-color=a8dadc
+ring-wrong-color=ff6b6b
+separator-color=00000000
+text-color=f1faee
+text-clear-color=f1faee
+text-caps-lock-color=f1c40f
+text-ver-color=f1faee
+text-wrong-color=ff6b6b
+
+# Appearance
+indicator-radius=120
+indicator-thickness=10
+font=Inter
+font-size=14
+
+# Effects
+effect-blur=7x5
+effect-vignette=0.5:0.5
+fade-in=0.2
+
+# Grace period (optional - comment out to disable)
+grace=2
+grace-no-mouse
+grace-no-touch

@@ -51,7 +51,7 @@ QtObject {
     
     Process {
         id: lockProcess
-        command: ["loginctl", "lock-session"]
+        command: ["swaylock"]
         
         onFinished: {
             actionCompleted("lock")
