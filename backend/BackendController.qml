@@ -82,6 +82,31 @@ QtObject {
     }
     
     // ═══════════════════════════════════════════════════════════
+    // ADVANCED FEATURES
+    // ═══════════════════════════════════════════════════════════
+    
+    property alias media: mediaController
+    property alias notifications: notificationController
+    property alias icons: iconProvider
+    property alias screenshots: screenshotProvider
+    
+    MediaController {
+        id: mediaController
+    }
+    
+    NotificationController {
+        id: notificationController
+    }
+    
+    IconProvider {
+        id: iconProvider
+    }
+    
+    ScreenshotProvider {
+        id: screenshotProvider
+    }
+    
+    // ═══════════════════════════════════════════════════════════
     // SETTINGS CONTROLLERS
     // ═══════════════════════════════════════════════════════════
     
