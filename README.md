@@ -62,3 +62,4 @@ quickshell
 
 MIT
 # Qubar
+# Qubar
