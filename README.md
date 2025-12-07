@@ -61,7 +61,4 @@ quickshell
 ## 📄 License
 
 MIT
-# Qubar
-# Qubar
-# Qubar
-# Qubar
+
