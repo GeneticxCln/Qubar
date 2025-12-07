@@ -1,4 +1,4 @@
-# Qubar - QuickShell Top Bar
+# Qubar 
 
 A powerful, feature-rich QuickShell configuration for Hyprland featuring a browser-style tab bar, settings panel, app launcher, and desktop overview.
 
