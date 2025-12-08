@@ -79,6 +79,10 @@ PanelWindow {
         onLoaded: {
             item.backend = topBar.backend
             item.anchor.window = topBar
+            // Wire wallpaper picker signal to GlobalStates
+            item.openWallpaperPicker.connect(function() {
+                GlobalStates.wallpaperPickerVisible = true
+            })
         }
     }
     

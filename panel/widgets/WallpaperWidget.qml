@@ -11,8 +11,8 @@ Item {
     
     Rectangle {
         anchors.fill: parent
-        color: Theme.currentTheme.backgroundAlt
-        radius: Theme.currentTheme.cornerRadius
+        color: Theme.backgroundAlt
+        radius: Theme.cornerRadius
         
         RowLayout {
             anchors.fill: parent
@@ -23,9 +23,9 @@ Item {
                 width: 40
                 height: 40
                 radius: 20
-                color: Theme.currentTheme.background
+                color: Theme.background
                 border.width: 1
-                border.color: Theme.currentTheme.accent
+                border.color: Theme.accent
                 
                 Text {
                     anchors.centerIn: parent
@@ -40,15 +40,15 @@ Item {
                 
                 Text {
                     text: "Wallpaper"
-                    color: Theme.currentTheme.textPrimary
-                    font.family: Theme.currentTheme.fontFamily
+                    color: Theme.textPrimary
+                    font.family: Theme.fontFamily
                     font.bold: true
                 }
                 
                 Text {
                     text: "Click to change"
-                    color: Theme.currentTheme.textSecondary
-                    font.pixelSize: Theme.currentTheme.fontSizeSmall
+                    color: Theme.textSecondary
+                    font.pixelSize: Theme.fontSizeSmall
                 }
             }
         }
