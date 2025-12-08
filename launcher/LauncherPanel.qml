@@ -210,12 +210,13 @@ PopupWindow {
                         
                         delegate: AppListItem {
                             width: appList.width
+                            index: model.index
                             appData: modelData
                             backend: launcherPanel.backend
-                            isSelected: appList.currentIndex === index
+                            isSelected: appList.currentIndex === model.index
                             
                             onClicked: {
-                                appList.currentIndex = index
+                                appList.currentIndex = model.index
                             }
                             
                             onLaunched: {
@@ -237,11 +238,20 @@ PopupWindow {
                             }
                         }
                         
+                        // Loading state
+                        Text {
+                            anchors.centerIn: parent
+                            visible: backend.launcher.loading
+                            text: "Loading apps..."
+                            color: Theme.accent
+                            font.pixelSize: 14
+                        }
+                        
                         // Empty state
                         Text {
                             anchors.centerIn: parent
-                            visible: appList.count === 0
-                            text: "No apps found"
+                            visible: !backend.launcher.loading && appList.count === 0
+                            text: searchInput.text ? "No apps match \"" + searchInput.text + "\"" : "No apps found"
                             color: Theme.textDim
                             font.pixelSize: 14
                         }

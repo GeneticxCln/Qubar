@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Io
 
 QtObject {
@@ -17,16 +18,138 @@ QtObject {
     property var applications: []       // All parsed apps
     property var recentApps: []         // Recently launched (max 10)
     property var favoriteApps: []       // User favorites
+    property var launchCounts: ({})     // { desktopFile: count }
+    property var lastLaunched: ({})     // { desktopFile: timestamp }
     property string searchQuery: ""
     property string activeCategory: "all"
-    property var filteredApps: []       // Search results
+    property var filteredApps: []       // Search/filter results
     property bool loading: false
     
-    // Desktop entry locations
-    readonly property var desktopDirs: [
-        "/usr/share/applications",
-        Qt.getenv("HOME") + "/.local/share/applications"
-    ]
+    // File paths
+    readonly property string dataDir: Quickshell.env("HOME") + "/.local/share/qubar"
+    readonly property string favoritesFile: dataDir + "/favorites.json"
+    readonly property string statsFile: dataDir + "/launch_stats.json"
+    
+    // ═══════════════════════════════════════════════════════════
+    // SMART RANKING - Frequency + Recency based scoring
+    // ═══════════════════════════════════════════════════════════
+    
+    function getAppScore(app) {
+        if (!app || !app.desktopFile) return 0
+        
+        var score = 0
+        var df = app.desktopFile
+        
+        // Frequency score (0-50 points)
+        var count = launchCounts[df] || 0
+        score += Math.min(count * 5, 50)
+        
+        // Recency score (0-50 points) - decay over time
+        var lastTime = lastLaunched[df] || 0
+        if (lastTime > 0) {
+            var hoursSince = (Date.now() - lastTime) / (1000 * 60 * 60)
+            if (hoursSince < 1) score += 50
+            else if (hoursSince < 6) score += 40
+            else if (hoursSince < 24) score += 30
+            else if (hoursSince < 72) score += 20
+            else if (hoursSince < 168) score += 10
+        }
+        
+        // Favorite bonus
+        if (isFavorite(app)) score += 100
+        
+        return score
+    }
+    
+    function sortBySmartRanking(apps) {
+        return apps.slice().sort(function(a, b) {
+            var scoreA = getAppScore(a)
+            var scoreB = getAppScore(b)
+            
+            if (scoreB !== scoreA) {
+                return scoreB - scoreA // Higher score first
+            }
+            // Fallback: alphabetical
+            return a.name.localeCompare(b.name)
+        })
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // FUZZY SEARCH
+    // ═══════════════════════════════════════════════════════════
+    
+    function fuzzyMatch(text, query) {
+        if (!text || !query) return { matches: false, score: 0 }
+        
+        text = text.toLowerCase()
+        query = query.toLowerCase()
+        
+        // Exact match (highest score)
+        if (text.includes(query)) {
+            return { matches: true, score: 100 - text.indexOf(query) }
+        }
+        
+        // Abbreviation match (first letters of words)
+        var words = text.split(/[\s\-_]+/)
+        var abbrev = words.map(w => w.charAt(0)).join('')
+        if (abbrev.includes(query)) {
+            return { matches: true, score: 80 }
+        }
+        
+        // Fuzzy character match
+        var queryIdx = 0
+        var score = 0
+        var consecutive = 0
+        
+        for (var i = 0; i < text.length && queryIdx < query.length; i++) {
+            if (text[i] === query[queryIdx]) {
+                queryIdx++
+                consecutive++
+                score += consecutive * 2 // Bonus for consecutive matches
+            } else {
+                consecutive = 0
+            }
+        }
+        
+        if (queryIdx === query.length) {
+            return { matches: true, score: score }
+        }
+        
+        return { matches: false, score: 0 }
+    }
+    
+    function searchApps(apps, query) {
+        if (!query || query.trim() === "") {
+            return sortBySmartRanking(apps)
+        }
+        
+        query = query.trim().toLowerCase()
+        
+        var results = []
+        for (var i = 0; i < apps.length; i++) {
+            var app = apps[i]
+            
+            // Match against name, categories, keywords
+            var nameMatch = fuzzyMatch(app.name, query)
+            var catMatch = fuzzyMatch(app.categories || "", query)
+            var kwMatch = fuzzyMatch(app.keywords || "", query)
+            
+            var bestScore = Math.max(nameMatch.score, catMatch.score * 0.5, kwMatch.score * 0.7)
+            
+            if (nameMatch.matches || catMatch.matches || kwMatch.matches) {
+                results.push({ app: app, searchScore: bestScore })
+            }
+        }
+        
+        // Sort by search score + smart ranking
+        results.sort(function(a, b) {
+            var scoreA = a.searchScore + getAppScore(a.app)
+            var scoreB = b.searchScore + getAppScore(b.app)
+            return scoreB - scoreA
+        })
+        
+        return results.map(r => r.app)
+    }
     
     // ═══════════════════════════════════════════════════════════
     // PUBLIC FUNCTIONS
@@ -35,9 +158,7 @@ QtObject {
     function loadApplications() {
         loading = true
         console.log("[AppLauncher] Loading applications...")
-        
-        // Use find to get all .desktop files, then parse
-        loadProcess.start()
+        loadProcess.running = true
     }
     
     function launch(app) {
@@ -48,99 +169,135 @@ QtObject {
         
         console.log("[AppLauncher] Launching:", app.name)
         
-        // Use gtk-launch for proper desktop entry handling
-        launchProcess.command = ["gtk-launch", app.desktopFile.replace(/\.desktop$/, "")]
-        launchProcess.start()
+        // Track stats
+        var df = app.desktopFile
+        launchCounts[df] = (launchCounts[df] || 0) + 1
+        lastLaunched[df] = Date.now()
+        saveStats()
         
-        // Track recent
+        // Add to recent
         addToRecent(app)
+        
+        // Launch via gtk-launch
+        launchProcess.command = ["gtk-launch", df.replace(/\.desktop$/, "")]
+        launchProcess.running = true
+        
         appLaunched(app.name)
     }
     
     function search(query) {
-        searchQuery = query.toLowerCase().trim()
-        
-        if (!searchQuery) {
-            filteredApps = applications
-            return
-        }
-        
-        filteredApps = applications.filter(function(app) {
-            return app.name.toLowerCase().includes(searchQuery) ||
-                   (app.categories && app.categories.toLowerCase().includes(searchQuery)) ||
-                   (app.keywords && app.keywords.toLowerCase().includes(searchQuery))
-        })
-    }
-    
-    function getAppsByCategory(category) {
-        return applications.filter(function(app) {
-            return app.categories && app.categories.includes(category)
-        })
+        searchQuery = query
+        applyFilters()
     }
     
     function filterByCategory(categoryId) {
         activeCategory = categoryId
+        applyFilters()
+    }
+    
+    function applyFilters() {
+        var baseApps = applications
         
-        if (categoryId === "all") {
-            // Show all apps (but apply search if active)
-            if (searchQuery) {
-                search(searchQuery)
-            } else {
-                filteredApps = applications
-            }
-        } else if (categoryId === "favorites") {
-            filteredApps = favoriteApps
-        } else if (categoryId === "terminal") {
-            filteredApps = applications.filter(function(app) {
+        // Apply category filter first
+        if (activeCategory === "favorites") {
+            baseApps = favoriteApps
+        } else if (activeCategory === "terminal") {
+            baseApps = applications.filter(function(app) {
                 return app.categories && (
                     app.categories.includes("TerminalEmulator") ||
-                    app.categories.includes("System") ||
                     app.name.toLowerCase().includes("terminal") ||
-                    app.name.toLowerCase().includes("console")
+                    app.name.toLowerCase().includes("konsole") ||
+                    app.name.toLowerCase().includes("kitty") ||
+                    app.name.toLowerCase().includes("alacritty")
                 )
             })
-        } else if (categoryId === "files") {
-            filteredApps = applications.filter(function(app) {
+        } else if (activeCategory === "files") {
+            baseApps = applications.filter(function(app) {
                 return app.categories && (
                     app.categories.includes("FileManager") ||
-                    app.categories.includes("FileTools") ||
-                    app.name.toLowerCase().includes("file")
+                    app.name.toLowerCase().includes("files") ||
+                    app.name.toLowerCase().includes("nautilus") ||
+                    app.name.toLowerCase().includes("dolphin")
                 )
             })
-        } else if (categoryId === "settings") {
-            filteredApps = applications.filter(function(app) {
+        } else if (activeCategory === "settings") {
+            baseApps = applications.filter(function(app) {
                 return app.categories && (
                     app.categories.includes("Settings") ||
-                    app.categories.includes("System") ||
-                    app.name.toLowerCase().includes("setting") ||
-                    app.name.toLowerCase().includes("config")
+                    app.name.toLowerCase().includes("settings") ||
+                    app.name.toLowerCase().includes("preferences") ||
+                    app.name.toLowerCase().includes("configuration")
                 )
             })
         }
         
-        console.log("[AppLauncher] Filtered by category:", categoryId, "->", filteredApps.length, "apps")
+        // Then apply search
+        filteredApps = searchApps(baseApps, searchQuery)
+        
+        console.log("[AppLauncher] Filtered:", activeCategory, "search:", searchQuery, "->", filteredApps.length)
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // FAVORITES MANAGEMENT
+    // ═══════════════════════════════════════════════════════════
+    
+    function isFavorite(app) {
+        if (!app) return false
+        return favoriteApps.some(a => a.desktopFile === app.desktopFile)
     }
     
     function addToFavorites(app) {
-        if (!app) return
-        var exists = favoriteApps.some(a => a.desktopFile === app.desktopFile)
-        if (!exists) {
-            var newFavorites = favoriteApps.slice()
-            newFavorites.push(app)
-            favoriteApps = newFavorites
-            saveFavorites()
-        }
+        if (!app || isFavorite(app)) return
+        
+        var newFavorites = favoriteApps.slice()
+        newFavorites.push(app)
+        favoriteApps = newFavorites
+        saveFavorites()
+        console.log("[AppLauncher] Added to favorites:", app.name)
     }
     
     function removeFromFavorites(app) {
         if (!app) return
         favoriteApps = favoriteApps.filter(a => a.desktopFile !== app.desktopFile)
         saveFavorites()
+        console.log("[AppLauncher] Removed from favorites:", app.name)
     }
     
+    function toggleFavorite(app) {
+        if (isFavorite(app)) {
+            removeFromFavorites(app)
+        } else {
+            addToFavorites(app)
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // PERSISTENCE
+    // ═══════════════════════════════════════════════════════════
+    
     function saveFavorites() {
-        // In a real implementation, save to file
-        console.log("[AppLauncher] Favorites:", favoriteApps.length)
+        var favList = favoriteApps.map(a => a.desktopFile)
+        var json = JSON.stringify(favList, null, 2)
+        saveFileProcess.command = ["bash", "-c", "mkdir -p " + dataDir + " && echo '" + json + "' > " + favoritesFile]
+        saveFileProcess.running = true
+    }
+    
+    function loadFavorites() {
+        loadFavoritesProcess.running = true
+    }
+    
+    function saveStats() {
+        var stats = {
+            counts: launchCounts,
+            lastLaunched: lastLaunched
+        }
+        var json = JSON.stringify(stats, null, 2)
+        saveStatsProcess.command = ["bash", "-c", "mkdir -p " + dataDir + " && echo '" + json + "' > " + statsFile]
+        saveStatsProcess.running = true
+    }
+    
+    function loadStats() {
+        loadStatsProcess.running = true
     }
     
     // ═══════════════════════════════════════════════════════════
@@ -148,56 +305,122 @@ QtObject {
     // ═══════════════════════════════════════════════════════════
     
     function addToRecent(app) {
-        // Remove if exists, add to front
         var recent = recentApps.filter(a => a.desktopFile !== app.desktopFile)
         recent.unshift(app)
-        recentApps = recent.slice(0, 10) // Keep max 10
+        recentApps = recent.slice(0, 10)
     }
+    
+    property int pendingParseCount: 0
+    property var parsedApps: []
     
     function parseDesktopFiles(fileList) {
-        var apps = []
-        var files = fileList.trim().split("\n")
+        parsedApps = []
+        var files = fileList.trim().split("\n").filter(f => f.trim() !== "")
+        pendingParseCount = files.length
         
-        for (var i = 0; i < files.length; i++) {
-            var file = files[i].trim()
-            if (!file) continue
-            
-            // Parse each file synchronously (or queue async)
-            parseDesktopFile(file, function(app) {
-                if (app) apps.push(app)
-            })
+        if (files.length === 0) {
+            finishLoading()
+            return
         }
         
-        // Sort alphabetically
-        apps.sort(function(a, b) {
-            return a.name.localeCompare(b.name)
-        })
+        console.log("[AppLauncher] Parsing", files.length, "desktop files...")
         
-        applications = apps
-        filteredApps = apps
-        loading = false
-        console.log("[AppLauncher] Loaded", apps.length, "applications")
-        applicationsLoaded()
+        // Read all files at once with a single cat command
+        var cmd = "cat " + files.map(f => '"' + f + '"').join(" ") + " 2>/dev/null"
+        batchParseProcess.command = ["bash", "-c", cmd]
+        batchParseProcess.running = true
+        
+        // Store file list for later
+        appLauncher._pendingFiles = files
     }
     
-    function parseDesktopFile(filePath, callback) {
+    property var _pendingFiles: []
+    
+    function parseBatchContent(content) {
+        // Split by desktop entry boundaries
+        var files = _pendingFiles
+        var apps = []
+        
+        // Parse each file individually for accuracy
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i]
+            // Extract just the filename
+            var filename = file.split("/").pop()
+            
+            // Simple parse - read file directly
+            parseIndividualFile(file, apps)
+        }
+    }
+    
+    function parseIndividualFile(filePath, resultsArray) {
+        // Create inline parser for each file
         var proc = Qt.createQmlObject(`
+            import QtQuick
             import Quickshell.Io
             Process {
-                command: ["cat", "${filePath}"]
+                property string filePath: ""
+                running: false
             }
         `, appLauncher)
         
-        proc.finished.connect(function() {
-            var app = parseDesktopEntry(proc.stdout, filePath)
-            callback(app)
+        proc.filePath = filePath
+        proc.command = ["cat", filePath]
+        
+        proc.exited.connect(function(code, status) {
+            if (code === 0) {
+                var app = parseDesktopEntry(proc.stdout(), filePath)
+                if (app) {
+                    parsedApps.push(app)
+                }
+            }
+            pendingParseCount--
+            
+            if (pendingParseCount <= 0) {
+                finishLoading()
+            }
+            
             proc.destroy()
         })
         
-        proc.start()
+        proc.running = true
     }
     
+    function finishLoading() {
+        // Sort alphabetically first, then smart ranking will be applied during filtering
+        parsedApps.sort(function(a, b) {
+            return a.name.localeCompare(b.name)
+        })
+        
+        applications = parsedApps
+        filteredApps = sortBySmartRanking(parsedApps)
+        loading = false
+        
+        console.log("[AppLauncher] Loaded", applications.length, "applications")
+        applicationsLoaded()
+        
+        // Restore favorites references
+        restoreFavoriteReferences()
+    }
+    
+    function restoreFavoriteReferences() {
+        // After apps are loaded, update favoriteApps with full app objects
+        if (_loadedFavoriteIds && _loadedFavoriteIds.length > 0) {
+            var restored = []
+            for (var i = 0; i < _loadedFavoriteIds.length; i++) {
+                var id = _loadedFavoriteIds[i]
+                var app = applications.find(a => a.desktopFile === id)
+                if (app) restored.push(app)
+            }
+            favoriteApps = restored
+            console.log("[AppLauncher] Restored", restored.length, "favorites")
+        }
+    }
+    
+    property var _loadedFavoriteIds: []
+    
     function parseDesktopEntry(content, filePath) {
+        if (!content) return null
+        
         // Skip if NoDisplay=true or hidden
         if (content.includes("NoDisplay=true") || content.includes("Hidden=true")) {
             return null
@@ -215,10 +438,9 @@ QtObject {
             categories: extractValue(content, "Categories"),
             keywords: extractValue(content, "Keywords"),
             comment: extractValue(content, "Comment"),
-            desktopFile: filePath.split("/").pop() // Filename only
+            desktopFile: filePath.split("/").pop()
         }
         
-        // Skip if no name
         if (!app.name) return null
         
         return app
@@ -236,25 +458,81 @@ QtObject {
     
     Process {
         id: loadProcess
-        command: ["find", "/usr/share/applications", Qt.getenv("HOME") + "/.local/share/applications", 
+        command: ["find", "/usr/share/applications", Quickshell.env("HOME") + "/.local/share/applications",
                   "-maxdepth", "1", "-name", "*.desktop", "-type", "f"]
+        running: false
         
-        onFinished: {
-            parseDesktopFiles(stdout)
-        }
-        
-        onError: (msg) => {
-            console.error("[AppLauncher] Load error:", msg)
-            appLauncher.error(msg)
+        onExited: (code, status) => {
+            if (code === 0) {
+                parseDesktopFiles(stdout())
+            } else {
+                console.error("[AppLauncher] Find failed")
+                loading = false
+            }
         }
     }
     
     Process {
+        id: batchParseProcess
+        running: false
+        // Handled via individual parsing now
+    }
+    
+    Process {
         id: launchProcess
+        running: false
         
-        onError: (msg) => {
-            console.error("[AppLauncher] Launch error:", msg)
-            appLauncher.error(msg)
+        onExited: (code, status) => {
+            if (code !== 0) {
+                console.warn("[AppLauncher] Launch may have failed")
+            }
+        }
+    }
+    
+    Process {
+        id: saveFileProcess
+        running: false
+    }
+    
+    Process {
+        id: saveStatsProcess
+        running: false
+    }
+    
+    Process {
+        id: loadFavoritesProcess
+        command: ["cat", appLauncher.favoritesFile]
+        running: false
+        
+        onExited: (code, status) => {
+            if (code === 0) {
+                try {
+                    var ids = JSON.parse(stdout())
+                    _loadedFavoriteIds = ids
+                    console.log("[AppLauncher] Loaded", ids.length, "favorite IDs")
+                } catch (e) {
+                    console.log("[AppLauncher] No favorites file or invalid")
+                }
+            }
+        }
+    }
+    
+    Process {
+        id: loadStatsProcess
+        command: ["cat", appLauncher.statsFile]
+        running: false
+        
+        onExited: (code, status) => {
+            if (code === 0) {
+                try {
+                    var stats = JSON.parse(stdout())
+                    launchCounts = stats.counts || {}
+                    lastLaunched = stats.lastLaunched || {}
+                    console.log("[AppLauncher] Loaded launch stats")
+                } catch (e) {
+                    console.log("[AppLauncher] No stats file or invalid")
+                }
+            }
         }
     }
     
@@ -264,10 +542,15 @@ QtObject {
     
     function initialize() {
         console.log("[AppLauncher] Initializing...")
-        loadApplications()
+        loadStats()
+        loadFavorites()
+        
+        // Small delay to let stats/favorites load first
+        Qt.callLater(loadApplications)
     }
     
     Component.onCompleted: {
         console.log("[AppLauncher] Module loaded")
+        initialize() // Auto-initialize
     }
 }
