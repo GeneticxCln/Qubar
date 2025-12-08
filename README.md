@@ -59,7 +59,10 @@ sudo pacman -S hyprshot swappy
 sudo pacman -S wlogout
 
 # Screen locker
-sudo pacman -S swaylock-effects
+sudo pacman -S swaylock-effects hyprlock  # Choose one or both
+
+# Dynamic theming
+sudo pacman -S wallust
 
 # Optional (for screenshots & notifications)
 sudo pacman -S hyprshot dunst

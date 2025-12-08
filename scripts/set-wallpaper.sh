@@ -41,6 +41,11 @@ set_wallpaper() {
         }
     fi
     
+    # Extract colors with Wallust (if installed)
+    if command -v wallust &> /dev/null; then
+        wallust run "$WALLPAPER" 2>/dev/null || true
+    fi
+    
     # Reload hyprpaper if running
     if pgrep -x hyprpaper > /dev/null; then
         killall hyprpaper

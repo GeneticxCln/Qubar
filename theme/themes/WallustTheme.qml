@@ -1,0 +1,59 @@
+import QtQuick
+import "../../theme/themes"
+
+QtObject {
+    id: wallustTheme
+    
+    // Theme metadata
+    readonly property string name: "Dynamic"
+    readonly property string description: "Auto-generated from wallpaper colors"
+    
+    // Load wallust colors (fallback to dark theme if not available)
+    property var wallustColors: null
+    
+    Component.onCompleted: {
+        try {
+            wallustColors = Qt.createQmlObject(
+                'import QtQuick; import "../wallust-colors.qml" as WallustColors; WallustColors {}',
+                wallustTheme
+            )
+        } catch (e) {
+            console.warn("[WallustTheme] Could not load wallust colors, using dark theme fallback")
+        }
+    }
+    
+    // Bar Dimensions
+    readonly property int barHeight: 40
+    readonly property int cornerRadius: 10
+    readonly property int spacing: 4
+    
+    // Backgrounds (use wallust or fallback)
+    readonly property color background: wallustColors ? wallustColors.background : Qt.rgba(0.05, 0.05, 0.08, 0.85)
+    readonly property color backgroundBlur: wallustColors ? wallustColors.backgroundAlt : Qt.rgba(0.1, 0.1, 0.15, 0.4)
+    
+    // Tabs
+    readonly property color tabActive: wallustColors ? Qt.rgba(wallustColors.color4.r, wallustColors.color4.g, wallustColors.color4.b, 0.3) : Qt.rgba(0.2, 0.22, 0.28, 1.0)
+    readonly property color tabInactive: wallustColors ? Qt.rgba(wallustColors.color0.r, wallustColors.color0.g, wallustColors.color0.b, 0.6) : Qt.rgba(0.12, 0.12, 0.15, 0.6)
+    readonly property color tabHover: wallustColors ? Qt.rgba(wallustColors.color8.r, wallustColors.color8.g, wallustColors.color8.b, 0.8) : Qt.rgba(0.18, 0.18, 0.22, 0.8)
+    
+    // Workspaces
+    readonly property color workspaceActive: wallustColors ? wallustColors.accent : Qt.rgba(0.5, 0.4, 0.9, 1.0)
+    readonly property color workspaceOccupied: wallustColors ? wallustColors.foregroundAlt : Qt.rgba(0.8, 0.8, 0.8, 0.6)
+    readonly property color workspaceEmpty: wallustColors ? Qt.rgba(wallustColors.color8.r, wallustColors.color8.g, wallustColors.color8.b, 0.3) : Qt.rgba(0.5, 0.5, 0.5, 0.3)
+    
+    // Text
+    readonly property color textPrimary: wallustColors ? wallustColors.foreground : "#eceff4"
+    readonly property color textSecondary: wallustColors ? wallustColors.foregroundAlt : "#d8dee9"
+    readonly property color textDim: wallustColors ? wallustColors.color8 : "#4c566a"
+    
+    // Accents
+    readonly property color accent: wallustColors ? wallustColors.accent : "#81a1c1"
+    readonly property color urgent: wallustColors ? wallustColors.urgent : "#bf616a"
+    readonly property color success: wallustColors ? wallustColors.success : "#a3be8c"
+    
+    // Fonts
+    readonly property string fontFamily: "Inter, Roboto, Segoe UI, sans-serif"
+    readonly property int fontSizeSmall: 10
+    readonly property int fontSizeNormal: 12
+    readonly property int fontSizeLarge: 14
+}

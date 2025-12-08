@@ -19,6 +19,7 @@ QtObject {
     // Theme instances
     property var darkTheme: DarkTheme {}
     property var lightTheme: LightTheme {}
+    property var wallustTheme: WallustTheme {}
     
     // State file
     property string stateFile: Quickshell.env("HOME") + "/.config/quickshell/theme_state.json"
@@ -36,6 +37,9 @@ QtObject {
         } else if (themeName === "light") {
             currentTheme = lightTheme
             currentThemeName = "light"
+        } else if (themeName === "wallust" || themeName === "dynamic") {
+            currentTheme = wallustTheme
+            currentThemeName = "wallust"
         } else {
             console.warn("[ThemeManager] Unknown theme:", themeName)
             return
@@ -46,7 +50,14 @@ QtObject {
     }
     
     function toggleTheme() {
-        setTheme(currentThemeName === "dark" ? "light" : "dark")
+        // Cycle through: dark -> light -> wallust -> dark
+        if (currentThemeName === "dark") {
+            setTheme("light")
+        } else if (currentThemeName === "light") {
+            setTheme("wallust")
+        } else {
+            setTheme("dark")
+        }
     }
     
     function saveState() {

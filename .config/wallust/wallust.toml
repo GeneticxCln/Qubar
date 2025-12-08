@@ -1,0 +1,20 @@
+# ╔═══════════════════════════════════════════════════════════╗
+# ║                  WALLUST CONFIGURATION                    ║
+# ║         Dynamic color palette extraction from wallpapers  ║
+# ╚═══════════════════════════════════════════════════════════╝
+
+[general]
+backend = "resized"
+color_space = "lab"
+threshold = 10
+palette = "dark16"
+check_contrast = true
+
+[templates]
+# QuickShell QML colors output
+qml.template = '~/.config/wallust/templates/colors.qml'
+qml.target = '~/.config/quickshell/wallust-colors.qml'
+
+# GTK colors (optional)
+gtk.template = '~/.config/wallust/templates/colors-gtk.css'
+gtk.target = '~/.config/gtk-3.0/colors.css'
