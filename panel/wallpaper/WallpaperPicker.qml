@@ -8,7 +8,7 @@ import "../../theme"
 PanelWindow {
     id: wallpaperPickerWindow
     
-    // Window properties - centered on screen
+    // Window properties
     width: 1200
     height: 800
     
@@ -20,10 +20,10 @@ PanelWindow {
     // Main Container
     Rectangle {
         anchors.fill: parent
-        color: Theme.currentTheme.background
-        radius: Theme.currentTheme.cornerRadius
+        color: Theme.background
+        radius: Theme.cornerRadius
         border.width: 1
-        border.color: Theme.currentTheme.accent
+        border.color: Theme.accent
         
         ColumnLayout {
             anchors.fill: parent
@@ -43,8 +43,8 @@ PanelWindow {
                 
                 Text {
                     text: "Wallpaper Picker"
-                    color: Theme.currentTheme.textPrimary
-                    font.family: Theme.currentTheme.fontFamily
+                    color: Theme.textPrimary
+                    font.family: Theme.fontFamily
                     font.pixelSize: 24
                     font.bold: true
                     Layout.fillWidth: true
@@ -55,12 +55,12 @@ PanelWindow {
                     width: 32
                     height: 32
                     radius: 16
-                    color: closeHover.hovered ? Theme.currentTheme.urgent : "transparent"
+                    color: closeHover.hovered ? Theme.urgent : "transparent"
                     
                     Text {
                         anchors.centerIn: parent
                         text: "✕"
-                        color: Theme.currentTheme.textPrimary
+                        color: Theme.textPrimary
                     }
                     
                     HoverHandler { id: closeHover }
@@ -81,10 +81,10 @@ PanelWindow {
                 Rectangle {
                     Layout.fillWidth: true
                     height: 40
-                    color: Theme.currentTheme.backgroundAlt
-                    radius: Theme.currentTheme.cornerRadius
+                    color: Theme.backgroundAlt
+                    radius: Theme.cornerRadius
                     border.width: 1
-                    border.color: searchInput.activeFocus ? Theme.currentTheme.accent : "transparent"
+                    border.color: searchInput.activeFocus ? Theme.accent : "transparent"
                     
                     TextInput {
                         id: searchInput
@@ -94,15 +94,15 @@ PanelWindow {
                         verticalAlignment: TextInput.AlignVCenter
                         
                         text: backend && backend.wallpapers ? backend.wallpapers.searchQuery : ""
-                        color: Theme.currentTheme.textPrimary
-                        font.family: Theme.currentTheme.fontFamily
-                        font.pixelSize: Theme.currentTheme.fontSizeNormal
+                        color: Theme.textPrimary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeNormal
                         
                         property string placeholderText: "Search wallpapers..."
                         
                         Text {
                             text: parent.placeholderText
-                            color: Theme.currentTheme.textDim
+                            color: Theme.textDim
                             visible: !parent.text && !parent.activeFocus
                             anchors.fill: parent
                             verticalAlignment: Text.AlignVCenter
@@ -120,13 +120,13 @@ PanelWindow {
                 Rectangle {
                     width: 40
                     height: 40
-                    color: Theme.currentTheme.backgroundAlt
-                    radius: Theme.currentTheme.cornerRadius
+                    color: Theme.backgroundAlt
+                    radius: Theme.cornerRadius
                     
                     Text {
                         anchors.centerIn: parent
                         text: "↻"
-                        color: Theme.currentTheme.textPrimary
+                        color: Theme.textPrimary
                         font.pixelSize: 18
                     }
                     
@@ -157,16 +157,16 @@ PanelWindow {
                         property bool isActive: backend && backend.wallpapers && 
                                                backend.wallpapers.activeCategory === modelData
                         
-                        color: isActive ? Theme.currentTheme.accent : Theme.currentTheme.backgroundAlt
+                        color: isActive ? Theme.accent : Theme.backgroundAlt
                         border.width: 1
-                        border.color: isActive ? Theme.currentTheme.accent : "transparent"
+                        border.color: isActive ? Theme.accent : "transparent"
                         
                         Text {
                             id: catText
                             anchors.centerIn: parent
                             text: modelData
-                            color: parent.isActive ? "#ffffff" : Theme.currentTheme.textSecondary
-                            font.family: Theme.currentTheme.fontFamily
+                            color: parent.isActive ? "#ffffff" : Theme.textSecondary
+                            font.family: Theme.fontFamily
                         }
                         
                         MouseArea {
@@ -225,7 +225,7 @@ PanelWindow {
                 Text {
                     anchors.centerIn: parent
                     text: "No wallpapers found"
-                    color: Theme.currentTheme.textDim
+                    color: Theme.textDim
                     visible: backend && backend.wallpapers && 
                              !backend.wallpapers.loading && grid.count === 0
                     font.pixelSize: 18
@@ -238,8 +238,8 @@ PanelWindow {
                 
                 Text {
                     text: grid.count + " wallpapers"
-                    color: Theme.currentTheme.textDim
-                    font.pixelSize: Theme.currentTheme.fontSizeSmall
+                    color: Theme.textDim
+                    font.pixelSize: Theme.fontSizeSmall
                 }
                 
                 Item { Layout.fillWidth: true }
@@ -248,15 +248,15 @@ PanelWindow {
                 Rectangle {
                     width: 120
                     height: 36
-                    color: Theme.currentTheme.backgroundAlt
-                    radius: Theme.currentTheme.cornerRadius
+                    color: Theme.backgroundAlt
+                    radius: Theme.cornerRadius
                     border.width: 1
-                    border.color: Theme.currentTheme.accent
+                    border.color: Theme.accent
                     
                     Text {
                         anchors.centerIn: parent
                         text: "Random"
-                        color: Theme.currentTheme.textPrimary
+                        color: Theme.textPrimary
                     }
                     
                     MouseArea {

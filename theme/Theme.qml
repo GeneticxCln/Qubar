@@ -31,6 +31,7 @@ QtObject {
     
     // Backgrounds
     readonly property color background: manager.currentTheme.background
+    readonly property color backgroundAlt: manager.currentTheme.backgroundAlt || manager.currentTheme.background
     readonly property color backgroundBlur: manager.currentTheme.backgroundBlur
     
     // Tabs

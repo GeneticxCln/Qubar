@@ -21,10 +21,10 @@ Item {
         id: card
         anchors.fill: parent
         anchors.margins: 5
-        color: Theme.currentTheme.backgroundAlt
-        radius: Theme.currentTheme.cornerRadius
+        color: Theme.backgroundAlt
+        radius: Theme.cornerRadius
         border.width: 1
-        border.color: hoverHandler.hovered ? Theme.currentTheme.accent : "transparent"
+        border.color: hoverHandler.hovered ? Theme.accent : "transparent"
         clip: true
         
         Behavior on border.color { ColorAnimation { duration: 150 } }
@@ -76,9 +76,9 @@ Item {
             anchors.fill: nameBg
             anchors.margins: 5
             text: root.modelData.name
-            color: Theme.currentTheme.textPrimary
-            font.family: Theme.currentTheme.fontFamily
-            font.pixelSize: Theme.currentTheme.fontSizeSmall
+            color: Theme.textPrimary
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter

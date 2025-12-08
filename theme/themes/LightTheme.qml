@@ -14,6 +14,7 @@ QtObject {
     
     // Backgrounds
     readonly property color background: Qt.rgba(0.95, 0.95, 0.98, 0.95)
+    readonly property color backgroundAlt: Qt.rgba(0.88, 0.88, 0.92, 0.95)
     readonly property color backgroundBlur: Qt.rgba(0.9, 0.9, 0.95, 0.7)
     
     // Tabs / Interactive Elements

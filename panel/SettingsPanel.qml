@@ -2,18 +2,11 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import "widgets" as widgets
-import "../backend"
-import "../" // For GlobalStates usage if needed
 import Quickshell
 import "../theme"
 
 PopupWindow {
     id: settingsPanel
-    
-    // Positioning (Top Right, below bar)
-    anchor.window: topBar  // Make sure to set this property when instantiating
-    anchor.on: Anchor.BottomRight
-    anchor.rect: AnchorRect.Selection // Or appropriate rect
     
     width: 340
     height: contentLayout.implicitHeight + 32
@@ -24,6 +17,9 @@ PopupWindow {
     // Dependencies
     required property var backend
     
+    // Signal for opening wallpaper picker
+    signal openWallpaperPicker()
+    
     // Background with Blur
     Rectangle {
         anchors.fill: parent
@@ -31,8 +27,6 @@ PopupWindow {
         radius: Theme.cornerRadius
         border.width: 1
         border.color: Qt.rgba(1, 1, 1, 0.1)
-        
-        // Shadow/Blur would go here
     }
     
     ColumnLayout {
@@ -47,28 +41,41 @@ PopupWindow {
             spacing: 8
             
             // Volume
-            SliderControl {
+            widgets.SliderControl {
                 Layout.fillWidth: true
                 label: "Volume"
-                icon: backend.audio.muted ? "🔇" : "🔊"
-                value: backend.audio.volume
+                icon: backend && backend.audio && backend.audio.muted ? "🔇" : "🔊"
+                value: backend && backend.audio ? backend.audio.volume : 50
                 from: 0
                 to: 100
                 
-                onMoved: (val) => backend.audio.setVolume(val)
+                onMoved: (val) => {
+                    if (backend && backend.audio) backend.audio.setVolume(val)
+                }
             }
             
             // Brightness
-            SliderControl {
+            widgets.SliderControl {
                 Layout.fillWidth: true
                 label: "Brightness"
                 icon: "☀️"
-                value: backend.display.brightness
+                value: backend && backend.display ? backend.display.brightness : 100
                 from: 5
                 to: 100
                 
-                onMoved: (val) => backend.display.setBrightness(val)
+                onMoved: (val) => {
+                    if (backend && backend.display) backend.display.setBrightness(val)
+                }
             }
+        }
+        
+        // Separator
+        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.textDim; opacity: 0.2 }
+        
+        // WALLPAPER WIDGET
+        widgets.WallpaperWidget {
+            Layout.fillWidth: true
+            onOpenWallpaperPicker: settingsPanel.openWallpaperPicker()
         }
         
         // Separator
@@ -82,52 +89,57 @@ PopupWindow {
             columnSpacing: 12
             
             // WiFi
-            QuickToggle {
+            widgets.QuickToggle {
                 Layout.fillWidth: true
                 label: "WiFi"
                 icon: "📶"
-                active: backend.network.wifiEnabled
-                statusText: backend.network.currentNetwork || (active ? "On" : "Off")
+                active: backend && backend.network ? backend.network.wifiEnabled : false
+                statusText: backend && backend.network && backend.network.currentNetwork ? 
+                           backend.network.currentNetwork : (active ? "On" : "Off")
                 
-                onClicked: backend.network.toggleWifi()
+                onClicked: {
+                    if (backend && backend.network) backend.network.toggleWifi()
+                }
             }
             
             // Bluetooth
-            QuickToggle {
+            widgets.QuickToggle {
                 Layout.fillWidth: true
                 label: "Bluetooth"
                 icon: "ᛒ"
-                active: backend.bluetooth.powered
-                statusText: backend.bluetooth.pairedDevices.length + " paired"
+                active: backend && backend.bluetooth ? backend.bluetooth.powered : false
+                statusText: backend && backend.bluetooth ? 
+                           backend.bluetooth.pairedDevices.length + " paired" : "Off"
                 
-                onClicked: backend.bluetooth.togglePower()
+                onClicked: {
+                    if (backend && backend.bluetooth) backend.bluetooth.togglePower()
+                }
             }
             
             // Night Light
-            QuickToggle {
+            widgets.QuickToggle {
                 Layout.fillWidth: true
                 label: "Night Light"
                 icon: "🌙"
-                active: backend.display.nightLightEnabled
+                active: backend && backend.display ? backend.display.nightLightEnabled : false
                 statusText: active ? "On" : "Off"
                 
-                onClicked: backend.display.toggleNightLight()
+                onClicked: {
+                    if (backend && backend.display) backend.display.toggleNightLight()
+                }
             }
             
-            // VPN (Example - just toggles first available)
-            QuickToggle {
+            // Theme Toggle
+            widgets.QuickToggle {
                 Layout.fillWidth: true
-                label: "VPN"
-                icon: "🛡️"
-                active: backend.network.vpnConnections.some(v => v.active)
-                statusText: active ? "Connected" : "Off"
+                label: "Theme"
+                icon: Theme.currentThemeName === "dark" ? "🌙" : 
+                      Theme.currentThemeName === "light" ? "☀️" : "🎨"
+                active: Theme.currentThemeName !== "dark"
+                statusText: Theme.currentThemeName.charAt(0).toUpperCase() + 
+                           Theme.currentThemeName.slice(1)
                 
-                onClicked: {
-                    // Logic to toggle primary VPN or show list
-                    if (backend.network.vpnConnections.length > 0) {
-                        backend.network.toggleVpn(backend.network.vpnConnections[0].name)
-                    }
-                }
+                onClicked: Theme.toggleTheme()
             }
         }
         
@@ -135,7 +147,7 @@ PopupWindow {
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.textDim; opacity: 0.2 }
 
         // 3. MEDIA CONTROL
-        MediaPlayerWidget {
+        widgets.MediaPlayerWidget {
             Layout.fillWidth: true
             backend: settingsPanel.backend
         }
@@ -143,8 +155,8 @@ PopupWindow {
         // Separator
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.textDim; opacity: 0.2 }
         
-        // 3. FAN CONTROL
-        FanControlWidget {
+        // 4. FAN CONTROL
+        widgets.FanControlWidget {
             Layout.fillWidth: true
             backend: settingsPanel.backend
         }
@@ -152,10 +164,11 @@ PopupWindow {
         // Separator
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.textDim; opacity: 0.2 }
         
-        // 4. POWER CONTROLS
-        PowerRow {
+        // 5. POWER CONTROLS
+        widgets.PowerRow {
             Layout.fillWidth: true
             onAction: (type) => {
+                if (!backend || !backend.power) return
                 switch(type) {
                     case "lock": backend.power.lockScreen(); break;
                     case "suspend": backend.power.suspend(); break;
