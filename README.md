@@ -21,7 +21,24 @@ Complete QuickShell-based desktop environment for Hyprland with advanced feature
 
 ## 🚀 Installation
 
-### Prerequisites
+### Quick Install (Recommended)
+```bash
+git clone https://github.com/GeneticxCln/Qubar.git
+cd Qubar
+./install.sh
+```
+
+The installer will:
+- Check your system (Arch Linux)
+- Backup existing configs (optional)
+- Install all dependencies
+- Deploy Qubar configs
+- Set up SDDM (optional)
+- Configure initial wallpaper
+
+### Manual Installation
+
+#### Prerequisites
 ```bash
 # Core dependencies
 sudo pacman -S hyprland quickshell qt6-declarative
