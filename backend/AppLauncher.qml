@@ -16,7 +16,9 @@ QtObject {
     // ═══════════════════════════════════════════════════════════
     property var applications: []       // All parsed apps
     property var recentApps: []         // Recently launched (max 10)
+    property var favoriteApps: []       // User favorites
     property string searchQuery: ""
+    property string activeCategory: "all"
     property var filteredApps: []       // Search results
     property bool loading: false
     
@@ -74,6 +76,71 @@ QtObject {
         return applications.filter(function(app) {
             return app.categories && app.categories.includes(category)
         })
+    }
+    
+    function filterByCategory(categoryId) {
+        activeCategory = categoryId
+        
+        if (categoryId === "all") {
+            // Show all apps (but apply search if active)
+            if (searchQuery) {
+                search(searchQuery)
+            } else {
+                filteredApps = applications
+            }
+        } else if (categoryId === "favorites") {
+            filteredApps = favoriteApps
+        } else if (categoryId === "terminal") {
+            filteredApps = applications.filter(function(app) {
+                return app.categories && (
+                    app.categories.includes("TerminalEmulator") ||
+                    app.categories.includes("System") ||
+                    app.name.toLowerCase().includes("terminal") ||
+                    app.name.toLowerCase().includes("console")
+                )
+            })
+        } else if (categoryId === "files") {
+            filteredApps = applications.filter(function(app) {
+                return app.categories && (
+                    app.categories.includes("FileManager") ||
+                    app.categories.includes("FileTools") ||
+                    app.name.toLowerCase().includes("file")
+                )
+            })
+        } else if (categoryId === "settings") {
+            filteredApps = applications.filter(function(app) {
+                return app.categories && (
+                    app.categories.includes("Settings") ||
+                    app.categories.includes("System") ||
+                    app.name.toLowerCase().includes("setting") ||
+                    app.name.toLowerCase().includes("config")
+                )
+            })
+        }
+        
+        console.log("[AppLauncher] Filtered by category:", categoryId, "->", filteredApps.length, "apps")
+    }
+    
+    function addToFavorites(app) {
+        if (!app) return
+        var exists = favoriteApps.some(a => a.desktopFile === app.desktopFile)
+        if (!exists) {
+            var newFavorites = favoriteApps.slice()
+            newFavorites.push(app)
+            favoriteApps = newFavorites
+            saveFavorites()
+        }
+    }
+    
+    function removeFromFavorites(app) {
+        if (!app) return
+        favoriteApps = favoriteApps.filter(a => a.desktopFile !== app.desktopFile)
+        saveFavorites()
+    }
+    
+    function saveFavorites() {
+        // In a real implementation, save to file
+        console.log("[AppLauncher] Favorites:", favoriteApps.length)
     }
     
     // ═══════════════════════════════════════════════════════════
