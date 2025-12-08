@@ -1,9 +1,11 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import "widgets" as widgets
+import "../backend"
+import "../" // For GlobalStates usage if needed
 import Quickshell
 import "../theme"
-import "widgets"
 
 PopupWindow {
     id: settingsPanel

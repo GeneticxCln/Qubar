@@ -89,6 +89,7 @@ QtObject {
     property alias notifications: notificationController
     property alias icons: iconProvider
     property alias screenshots: screenshotProvider
+    property alias wallpapers: wallpaperManager
     
     MediaController {
         id: mediaController
@@ -104,6 +105,10 @@ QtObject {
     
     ScreenshotProvider {
         id: screenshotProvider
+    }
+    
+    WallpaperManager {
+        id: wallpaperManager
     }
     
     // ═══════════════════════════════════════════════════════════
