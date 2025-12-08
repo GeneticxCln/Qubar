@@ -109,7 +109,7 @@ PopupWindow {
                             
                             property bool isActive: launcherPanel.activeCategory === modelData.id
                             
-                            color: isActive ? Theme.accent : (tabHover.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent")
+                            color: isActive ? Theme.selection : (tabHover.containsMouse ? Theme.hoverLight : "transparent")
                             
                             Text {
                                 anchors.centerIn: parent
@@ -234,7 +234,7 @@ PopupWindow {
                                 implicitWidth: 4
                                 radius: 2
                                 color: Theme.textDim
-                                opacity: 0.3
+                                opacity: 0.4
                             }
                         }
                         

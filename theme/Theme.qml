@@ -53,6 +53,14 @@ QtObject {
     readonly property color accent: manager.currentTheme.accent
     readonly property color urgent: manager.currentTheme.urgent
     readonly property color success: manager.currentTheme.success
+    readonly property color warning: manager.currentTheme.warning || "#ffd700"
+    
+    // Selection & Hover (computed from theme)
+    readonly property color selection: accent
+    readonly property color selectionText: "#ffffff"
+    readonly property color hover: Qt.rgba(textPrimary.r, textPrimary.g, textPrimary.b, 0.08)
+    readonly property color hoverLight: Qt.rgba(1, 1, 1, 0.1)
+    readonly property color overlay: Qt.rgba(0, 0, 0, 0.3)
     
     // Fonts
     readonly property string fontFamily: manager.currentTheme.fontFamily

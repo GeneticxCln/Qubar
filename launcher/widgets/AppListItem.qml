@@ -17,7 +17,7 @@ Rectangle {
     
     // Layout
     height: 38
-    color: isSelected ? Theme.accent : (hoverArea.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : "transparent")
+    color: isSelected ? Theme.selection : (hoverArea.containsMouse ? Theme.hover : "transparent")
     radius: 6
     
     Behavior on color { ColorAnimation { duration: 80 } }
@@ -46,7 +46,7 @@ Rectangle {
             Rectangle {
                 anchors.fill: parent
                 radius: 4
-                color: isSelected ? Qt.rgba(0, 0, 0, 0.3) : Theme.accent
+                color: isSelected ? Theme.overlay : Theme.accent
                 visible: appIcon.status !== Image.Ready || appIcon.source == ""
                 
                 Text {
@@ -54,7 +54,7 @@ Rectangle {
                     text: appData && appData.name ? appData.name.charAt(0).toUpperCase() : "?"
                     font.pixelSize: 12
                     font.bold: true
-                    color: isSelected ? "#ffffff" : "#000000"
+                    color: isSelected ? Theme.selectionText : Theme.background
                 }
             }
         }
@@ -63,7 +63,7 @@ Rectangle {
         Text {
             Layout.fillWidth: true
             text: appData ? appData.name : ""
-            color: isSelected ? "#ffffff" : Theme.textPrimary
+            color: isSelected ? Theme.selectionText : Theme.textPrimary
             font.pixelSize: 13
             font.family: Theme.fontFamily
             elide: Text.ElideRight
@@ -72,7 +72,7 @@ Rectangle {
         // Favorite star
         Text {
             text: backend && backend.launcher && backend.launcher.isFavorite(appData) ? "★" : "☆"
-            color: isSelected ? "#ffffff" : (backend && backend.launcher && backend.launcher.isFavorite(appData) ? "#ffd700" : Theme.textDim)
+            color: isSelected ? Theme.selectionText : (backend && backend.launcher && backend.launcher.isFavorite(appData) ? Theme.warning : Theme.textDim)
             font.pixelSize: 14
             visible: hoverArea.containsMouse || isSelected
             opacity: starHover.containsMouse ? 1.0 : 0.6
@@ -98,7 +98,7 @@ Rectangle {
         Text {
             visible: isSelected
             text: "▶"
-            color: "#ffffff"
+            color: Theme.selectionText
             font.pixelSize: 10
             opacity: 0.7
         }
@@ -113,10 +113,8 @@ Rectangle {
         
         onClicked: {
             if (isSelected) {
-                // Already selected, launch it
                 appListItem.launched()
             } else {
-                // Select it
                 appListItem.clicked()
             }
         }
