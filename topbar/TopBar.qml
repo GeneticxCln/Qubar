@@ -15,23 +15,19 @@ PanelWindow {
     }
     height: Theme.barHeight
     
-    // Background (Transparent/Blur)
+    // Background
     color: "transparent"
     
-    // Exclusions (reserve space so maximized windows don't cover it)
+    // Reserve space
     exclusionMode: ExclusionMode.Normal
     
     // Dependencies
     required property var backend
     
-    // Main Background with Blur
+    // Main Background
     Rectangle {
         anchors.fill: parent
         color: Theme.background
-        radius: 0 // Top bar usually rectangular, but could have bottom corners rounded
-        
-        // Blur effect (if QuickShell supports it via specific module, or pseudo-blur)
-        // For now, semi-transparent background
     }
     
     // Main Layout
@@ -39,39 +35,60 @@ PanelWindow {
         anchors.fill: parent
         anchors.leftMargin: 8
         anchors.rightMargin: 8
-        spacing: 12
+        spacing: 8
         
-        // Left: Start & Workspaces
+        // ═══════════════════════════════════════════════════════════
+        // LEFT SECTION
+        // ═══════════════════════════════════════════════════════════
+        
         StartButton {
             onStartClicked: launcherPanel.visible = !launcherPanel.visible
         }
         
         // Separator
-        Rectangle { width: 1; height: 16; color: Theme.textDim; opacity: 0.3 }
+        Rectangle { width: 1; height: 20; color: Theme.textDim; opacity: 0.2 }
         
         WorkspaceWidget {
             backend: topBar.backend
         }
         
         // Separator
-        Rectangle { width: 1; height: 16; color: Theme.textDim; opacity: 0.3 }
+        Rectangle { width: 1; height: 20; color: Theme.textDim; opacity: 0.2 }
         
-        // Middle: Window Tabs (Takes available space)
+        // ═══════════════════════════════════════════════════════════
+        // CENTER SECTION - Window Tabs + Music
+        // ═══════════════════════════════════════════════════════════
+        
         WindowTabsWidget {
             Layout.fillWidth: true
             Layout.fillHeight: true
             backend: topBar.backend
         }
         
-        // Right: System Tray
+        // Music Widget (only shows when playing)
+        MusicWidget {
+            backend: topBar.backend
+        }
+        
+        // Separator
+        Rectangle { width: 1; height: 20; color: Theme.textDim; opacity: 0.2 }
+        
+        // ═══════════════════════════════════════════════════════════
+        // RIGHT SECTION - System Tray
+        // ═══════════════════════════════════════════════════════════
+        
         SystemTrayWidget {
             backend: topBar.backend
-            onSettingsClicked: settingsPanel.visible = !settingsPanel.visible // Toggle
-            onNotificationClicked: notificationPanel.visible = !notificationPanel.visible // Toggle
+            onSettingsClicked: settingsPanel.visible = !settingsPanel.visible
+            onNotificationClicked: notificationPanel.visible = !notificationPanel.visible
         }
     }
     
-    // Settings Panel Popup
+    // ═══════════════════════════════════════════════════════════
+    // PANEL LOADERS
+    // ═══════════════════════════════════════════════════════════
+    
+    // Settings Panel
     Loader {
         id: settingsLoader
         active: true
@@ -79,17 +96,14 @@ PanelWindow {
         onLoaded: {
             item.backend = topBar.backend
             item.anchor.window = topBar
-            // Wire wallpaper picker signal to GlobalStates
             item.openWallpaperPicker.connect(function() {
                 GlobalStates.wallpaperPickerVisible = true
             })
         }
     }
-    
-    // Convenient property to access the panel item
     property var settingsPanel: settingsLoader.item
     
-    // Launcher Panel Popup
+    // Launcher Panel
     Loader {
         id: launcherLoader
         active: true
@@ -99,6 +113,7 @@ PanelWindow {
             item.anchor.window = topBar
         }
     }
+    property var launcherPanel: launcherLoader.item
     
     Connections {
         target: topBar.backend
@@ -107,9 +122,7 @@ PanelWindow {
         }
     }
     
-    property var launcherPanel: launcherLoader.item
-    
-    // Notification Panel Popup
+    // Notification Panel
     Loader {
         id: notificationLoader
         active: true
@@ -118,10 +131,9 @@ PanelWindow {
             item.backend = topBar.backend
         }
     }
-    
     property var notificationPanel: notificationLoader.item
     
     Component.onCompleted: {
-        console.log("[TopBar] Loaded")
+        console.log("[TopBar] Loaded with all widgets")
     }
 }

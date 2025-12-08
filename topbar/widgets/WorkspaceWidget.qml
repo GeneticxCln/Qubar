@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import "../../theme"
 
 RowLayout {
@@ -11,62 +10,68 @@ RowLayout {
     required property var backend
     
     Repeater {
-        model: backend.workspaces // List of WorkspaceModel objects
+        model: backend.workspaces
         
         Rectangle {
             id: wsButton
             
-            // Layout properties
-            Layout.preferredWidth: 32
-            Layout.preferredHeight: 32
+            Layout.preferredWidth: 28
+            Layout.preferredHeight: 28
             Layout.alignment: Qt.AlignVCenter
             
-            // Visual properties
-            radius: 8
+            radius: 6
+            
             color: {
                 if (modelData.active) return Theme.workspaceActive
-                if (hoverHandler.hovered) return Theme.tabHover
+                if (hoverHandler.containsMouse) return Theme.tabHover
                 return "transparent"
             }
             
-            // Animation for color change
-            Behavior on color { ColorAnimation { duration: 150 } }
+            border.width: modelData.active ? 0 : (modelData.occupied ? 1 : 0)
+            border.color: Theme.textDim
             
-            // Content (ID or Icon)
+            Behavior on color { ColorAnimation { duration: 100 } }
+            Behavior on border.color { ColorAnimation { duration: 100 } }
+            
+            // Number
             Text {
                 anchors.centerIn: parent
                 text: modelData.id
                 color: {
-                    if (modelData.active) return Theme.textPrimary
-                    if (modelData.occupied) return Theme.textSecondary
+                    if (modelData.active) return Theme.background
+                    if (modelData.occupied) return Theme.textPrimary
                     return Theme.textDim
                 }
                 font.bold: modelData.active
-                font.pixelSize: Theme.fontSizeNormal
+                font.pixelSize: 12
                 font.family: Theme.fontFamily
             }
             
-            // Occupancy dot (for inactive but occupied workspaces)
+            // Active indicator (bottom line)
             Rectangle {
-                visible: modelData.occupied && !modelData.active
-                width: 4; height: 4; radius: 2
-                color: Theme.textSecondary
+                visible: modelData.active
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottomMargin: 4
+                anchors.bottomMargin: 2
+                width: parent.width * 0.6
+                height: 2
+                radius: 1
+                color: Theme.background
+                opacity: 0.5
             }
             
-            // Interaction
-            HoverHandler {
+            MouseArea {
                 id: hoverHandler
+                anchors.fill: parent
+                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
+                
+                onClicked: backend.switchWorkspace(modelData.id)
             }
             
-            TapHandler {
-                onTapped: {
-                    backend.switchWorkspace(modelData.id)
-                }
-            }
+            ToolTip.visible: hoverHandler.containsMouse
+            ToolTip.text: "Workspace " + modelData.id + (modelData.occupied ? " (" + modelData.windowCount + " windows)" : " (empty)")
+            ToolTip.delay: 500
         }
     }
 }

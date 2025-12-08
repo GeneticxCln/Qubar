@@ -5,45 +5,48 @@ import "../../theme"
 
 RowLayout {
     id: systemTrayWidget
-    spacing: 8
+    spacing: 6
     
     // Dependencies
     required property var backend
-    property var sysInfo: backend.systemInfoData
+    property var sysInfo: backend.systemInfo
     
     signal settingsClicked()
     signal notificationClicked()
     
-    // Interaction for whole tray
-    TapHandler {
-        onTapped: systemTrayWidget.settingsClicked()
+    // ═══════════════════════════════════════════════════════════
+    // RESOURCE MONITOR
+    // ═══════════════════════════════════════════════════════════
+    ResourceWidget {
+        backend: systemTrayWidget.backend
     }
     
-    // ═══════════════════════════════════════════════════════════
-    
+    // Separator
+    Rectangle { width: 1; height: 16; color: Theme.textDim; opacity: 0.3 }
     
     // ═══════════════════════════════════════════════════════════
     // NOTIFICATION BELL
     // ═══════════════════════════════════════════════════════════
     Rectangle {
-        color: bellHover.hovered ? Theme.tabHover : "transparent"
-        radius: 4
-        implicitWidth: 48
-        implicitHeight: Theme.barHeight - 12
+        color: bellHover.containsMouse ? Theme.tabHover : "transparent"
+        radius: 6
+        implicitWidth: 36
+        implicitHeight: Theme.barHeight - 10
         Layout.alignment: Qt.AlignVCenter
         
-        Behavior on color { ColorAnimation { duration: 150 } }
+        Behavior on color { ColorAnimation { duration: 100 } }
         
         Item {
             anchors.centerIn: parent
-            width: 24
-            height: 24
+            width: 20
+            height: 20
             
             Text {
                 anchors.centerIn: parent
-                text: "🔔"
+                text: "󰂚" // nf-md-bell
+                font.family: "JetBrainsMono Nerd Font"
                 font.pixelSize: 16
-                opacity: backend.notifications.notifications.length > 0 ? 1.0 : 0.5
+                color: backend.notifications.unreadCount > 0 ? Theme.accent : Theme.textSecondary
             }
             
             // Unread badge
@@ -51,101 +54,135 @@ RowLayout {
                 visible: backend.notifications.unreadCount > 0
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.rightMargin: -4
+                anchors.rightMargin: -6
                 anchors.topMargin: -4
-                width: Math.max(16, badgeText.width + 6)
-                height: 16
-                radius: 8
-                color: Theme.accent
+                width: Math.max(14, badgeText.width + 4)
+                height: 14
+                radius: 7
+                color: Theme.urgent
                 
                 Text {
                     id: badgeText
                     anchors.centerIn: parent
                     text: backend.notifications.unreadCount > 99 ? "99+" : backend.notifications.unreadCount
-                    color: "#000"
-                    font.pixelSize: 9
+                    color: "#ffffff"
+                    font.pixelSize: 8
                     font.bold: true
                 }
             }
         }
         
-        HoverHandler { 
+        MouseArea {
             id: bellHover
-            cursorShape: Qt.PointingHandCursor 
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            
+            onClicked: systemTrayWidget.notificationClicked()
         }
         
-        TapHandler {
-            onTapped: {
-                systemTrayWidget.notificationClicked()
-                mouse.accepted = true
-            }
-        }
+        ToolTip.visible: bellHover.containsMouse
+        ToolTip.text: "Notifications"
+        ToolTip.delay: 500
     }
     
     // ═══════════════════════════════════════════════════════════
     // NETWORK
     // ═══════════════════════════════════════════════════════════
     Rectangle {
-        color: networkHover.hovered ? Theme.tabHover : "transparent"
-        radius: 4
-        implicitWidth: networkRow.implicitWidth + 16
-        implicitHeight: Theme.barHeight - 12
+        color: networkHover.containsMouse ? Theme.tabHover : "transparent"
+        radius: 6
+        implicitWidth: networkRow.implicitWidth + 12
+        implicitHeight: Theme.barHeight - 10
         Layout.alignment: Qt.AlignVCenter
         
-        Behavior on color { ColorAnimation { duration: 150 } }
-        HoverHandler { id: networkHover }
+        Behavior on color { ColorAnimation { duration: 100 } }
         
         RowLayout {
             id: networkRow
             anchors.centerIn: parent
-            spacing: 6
+            spacing: 4
             
             Text {
-                text: sysInfo.networkType === "wifi" ? "📶" : (sysInfo.networkType === "ethernet" ? "🔌" : "⚠️")
-                color: sysInfo.networkConnected ? Theme.textPrimary : Theme.urgent
-                font.pixelSize: Theme.fontSizeNormal
+                text: {
+                    if (!sysInfo || !sysInfo.networkConnected) return "󰤭" // wifi-off
+                    if (sysInfo.networkType === "wifi") return "󰤨" // wifi
+                    if (sysInfo.networkType === "ethernet") return "󰈀" // ethernet
+                    return "󰤫" // wifi-strength-4
+                }
+                font.family: "JetBrainsMono Nerd Font"
+                font.pixelSize: 14
+                color: sysInfo && sysInfo.networkConnected ? Theme.textSecondary : Theme.urgent
             }
             
             Text {
-                text: sysInfo.networkConnected ? (sysInfo.networkName || "Connected") : "Offline"
+                visible: sysInfo && sysInfo.networkConnected
+                text: sysInfo ? (sysInfo.networkName || "Connected") : ""
                 color: Theme.textSecondary
                 font.pixelSize: Theme.fontSizeSmall
                 font.family: Theme.fontFamily
             }
         }
+        
+        MouseArea {
+            id: networkHover
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+        }
     }
     
     // ═══════════════════════════════════════════════════════════
-    // BATTERY (Only if battery exists)
+    // BATTERY (Only if exists)
     // ═══════════════════════════════════════════════════════════
     Rectangle {
-        visible: sysInfo.hasBattery
-        color: batteryHover.hovered ? Theme.tabHover : "transparent"
-        radius: 4
-        implicitWidth: batteryRow.implicitWidth + 16
-        implicitHeight: Theme.barHeight - 12
+        visible: sysInfo && sysInfo.hasBattery
+        color: batteryHover.containsMouse ? Theme.tabHover : "transparent"
+        radius: 6
+        implicitWidth: batteryRow.implicitWidth + 12
+        implicitHeight: Theme.barHeight - 10
         Layout.alignment: Qt.AlignVCenter
         
-        Behavior on color { ColorAnimation { duration: 150 } }
-        HoverHandler { id: batteryHover }
+        Behavior on color { ColorAnimation { duration: 100 } }
         
         RowLayout {
             id: batteryRow
             anchors.centerIn: parent
-            spacing: 6
+            spacing: 4
             
             Text {
-                text: sysInfo.charging ? "⚡" : (sysInfo.batteryPercent > 20 ? "🔋" : "🪫")
-                color: sysInfo.batteryPercent <= 20 && !sysInfo.charging ? Theme.urgent : Theme.textPrimary
-                font.pixelSize: Theme.fontSizeNormal
+                text: {
+                    if (!sysInfo) return "󰁹"
+                    if (sysInfo.charging) return "󰂄" // charging
+                    if (sysInfo.batteryPercent > 90) return "󰁹"
+                    if (sysInfo.batteryPercent > 70) return "󰂀"
+                    if (sysInfo.batteryPercent > 50) return "󰁾"
+                    if (sysInfo.batteryPercent > 30) return "󰁼"
+                    if (sysInfo.batteryPercent > 10) return "󰁻"
+                    return "󰂃" // alert
+                }
+                font.family: "JetBrainsMono Nerd Font"
+                font.pixelSize: 14
+                color: {
+                    if (!sysInfo) return Theme.textSecondary
+                    if (sysInfo.batteryPercent <= 20 && !sysInfo.charging) return Theme.urgent
+                    if (sysInfo.charging) return Theme.success
+                    return Theme.textSecondary
+                }
             }
             
             Text {
-                text: sysInfo.batteryPercent + "%"
+                text: sysInfo ? sysInfo.batteryPercent + "%" : ""
                 color: Theme.textPrimary
                 font.pixelSize: Theme.fontSizeSmall
                 font.family: Theme.fontFamily
             }
+        }
+        
+        MouseArea {
+            id: batteryHover
+            anchors.fill: parent
+            hoverEnabled: true
         }
     }
     
@@ -153,14 +190,13 @@ RowLayout {
     // CLOCK
     // ═══════════════════════════════════════════════════════════
     Rectangle {
-        color: clockHover.hovered ? Theme.tabHover : "transparent"
-        radius: 4
-        implicitWidth: clockRow.implicitWidth + 16
-        implicitHeight: Theme.barHeight - 12
+        color: clockHover.containsMouse ? Theme.tabHover : "transparent"
+        radius: 6
+        implicitWidth: clockRow.implicitWidth + 12
+        implicitHeight: Theme.barHeight - 10
         Layout.alignment: Qt.AlignVCenter
         
-        Behavior on color { ColorAnimation { duration: 150 } }
-        HoverHandler { id: clockHover }
+        Behavior on color { ColorAnimation { duration: 100 } }
         
         RowLayout {
             id: clockRow
@@ -168,19 +204,32 @@ RowLayout {
             spacing: 6
             
             Text {
-                text: sysInfo.date
-                color: Theme.textSecondary
+                text: sysInfo ? sysInfo.date : ""
+                color: Theme.textDim
                 font.pixelSize: Theme.fontSizeSmall
                 font.family: Theme.fontFamily
             }
             
             Text {
-                text: sysInfo.time
+                text: sysInfo ? sysInfo.time : "--:--"
                 color: Theme.textPrimary
                 font.pixelSize: Theme.fontSizeNormal
                 font.family: Theme.fontFamily
                 font.bold: true
             }
         }
+        
+        MouseArea {
+            id: clockHover
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            
+            onClicked: systemTrayWidget.settingsClicked()
+        }
+        
+        ToolTip.visible: clockHover.containsMouse
+        ToolTip.text: "Settings"
+        ToolTip.delay: 500
     }
 }
