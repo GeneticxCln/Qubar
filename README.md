@@ -173,7 +173,19 @@ Qubar/
 - Slide-in panel from top-right
 - Clear all & DND toggle
 
-## 🔧 Troubleshooting
+## 🚀 Usage
+
+See [KEYBINDS.md](docs/KEYBINDS.md) for complete keybind reference.
+
+## 📚 Documentation
+
+- **[Installation Guide](docs/INSTALLATION.md)** - Detailed setup instructions
+- **[Customization Guide](docs/CUSTOMIZATION.md)** - Themes, colors, configs
+- **[Keybind Reference](docs/KEYBINDS.md)** - All keyboard shortcuts
+- **[FAQ & Troubleshooting](docs/FAQ.md)** - Common issues and solutions
+- **[SDDM Wallpaper Sync](docs/SDDM_WALLPAPER.md)** - Login screen wallpapers
+
+## 🛠️ Troubleshooting
 
 **QuickShell not starting:**
 ```bash
