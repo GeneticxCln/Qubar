@@ -70,6 +70,11 @@ PanelWindow {
             backend: topBar.backend
         }
         
+        // Cava Audio Visualizer (only shows when playing)
+        CavaWidget {
+            backend: topBar.backend
+        }
+        
         // Separator
         Rectangle { width: 1; height: 20; color: Theme.textDim; opacity: 0.2 }
         
