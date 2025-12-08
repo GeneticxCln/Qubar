@@ -3,22 +3,12 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import "../../theme"
-import "../../backend"
-import "../../" // For GlobalStates if it's in root
-
-// Ensure we have OpacityMask available
-import Qt5Compat.GraphicalEffects 
 
 // Standalone window for the wallpaper picker
 PanelWindow {
     id: wallpaperPickerWindow
     
-    // Center on screen logic usually handled by anchors + margins in Quickshell, 
-    // or by setting geometry. For a centered popup, we often use a full screen transparent window
-    // with a centered content rectangle, or a specific geometry.
-    // Let's make it a large centered modal-like window.
-    
-    anchors.centerIn: parent // Center on monitor
+    // Window properties - centered on screen
     width: 1200
     height: 800
     
@@ -35,11 +25,6 @@ PanelWindow {
         border.width: 1
         border.color: Theme.currentTheme.accent
         
-        // Blur background
-        layer.enabled: true
-        // If we had a Blur effect component, but standard Rectangle doesn't blur behind.
-        // QuickShell windows might support blur.
-        
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 20
@@ -52,7 +37,7 @@ PanelWindow {
                 
                 // Icon
                 Text {
-                    text: "🖼️" // Or icon font
+                    text: "🖼️"
                     font.pixelSize: 24
                 }
                 
@@ -82,7 +67,7 @@ PanelWindow {
                     
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: GlobalStates.wallpaperPickerVisible = false
+                        onClicked: wallpaperPickerWindow.visible = false
                     }
                 }
             }
@@ -108,7 +93,7 @@ PanelWindow {
                         anchors.rightMargin: 15
                         verticalAlignment: TextInput.AlignVCenter
                         
-                        text: backend.wallpapers.searchQuery
+                        text: backend && backend.wallpapers ? backend.wallpapers.searchQuery : ""
                         color: Theme.currentTheme.textPrimary
                         font.family: Theme.currentTheme.fontFamily
                         font.pixelSize: Theme.currentTheme.fontSizeNormal
@@ -124,7 +109,9 @@ PanelWindow {
                         }
                         
                         onTextChanged: {
-                            backend.wallpapers.filterWallpapers(text)
+                            if (backend && backend.wallpapers) {
+                                backend.wallpapers.filterWallpapers(text)
+                            }
                         }
                     }
                 }
@@ -145,7 +132,11 @@ PanelWindow {
                     
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: backend.wallpapers.loadWallpapers()
+                        onClicked: {
+                            if (backend && backend.wallpapers) {
+                                backend.wallpapers.loadWallpapers()
+                            }
+                        }
                     }
                 }
             }
@@ -156,14 +147,15 @@ PanelWindow {
                 spacing: 8
                 
                 Repeater {
-                    model: backend.wallpapers.categories
+                    model: backend && backend.wallpapers ? backend.wallpapers.categories : []
                     
                     Rectangle {
                         width: catText.contentWidth + 30
                         height: 32
                         radius: 16
                         
-                        property bool isActive: backend.wallpapers.activeCategory === modelData
+                        property bool isActive: backend && backend.wallpapers && 
+                                               backend.wallpapers.activeCategory === modelData
                         
                         color: isActive ? Theme.currentTheme.accent : Theme.currentTheme.backgroundAlt
                         border.width: 1
@@ -179,7 +171,11 @@ PanelWindow {
                         
                         MouseArea {
                             anchors.fill: parent
-                            onClicked: backend.wallpapers.setCategory(modelData)
+                            onClicked: {
+                                if (backend && backend.wallpapers) {
+                                    backend.wallpapers.setCategory(modelData)
+                                }
+                            }
                             cursorShape: Qt.PointingHandCursor
                         }
                     }
@@ -199,16 +195,16 @@ PanelWindow {
                     cellWidth: 290
                     cellHeight: 200
                     
-                    model: backend.wallpapers.filteredWallpapers
+                    model: backend && backend.wallpapers ? backend.wallpapers.filteredWallpapers : []
                     
                     delegate: WallpaperItem {
-                        modelData: modelData
+                        modelData: model.modelData !== undefined ? model.modelData : modelData
                         backend: wallpaperPickerWindow.backend
                         
                         onClicked: {
-                            backend.wallpapers.applyWallpaper(modelData.path)
-                            // Optional: Close window after selection?
-                            // wallpaperPickerWindow.visible = false
+                            if (backend && backend.wallpapers) {
+                                backend.wallpapers.applyWallpaper(modelData.path)
+                            }
                         }
                     }
                     
@@ -221,7 +217,7 @@ PanelWindow {
                 // Loading State
                 BusyIndicator {
                     anchors.centerIn: parent
-                    running: backend.wallpapers.loading
+                    running: backend && backend.wallpapers && backend.wallpapers.loading
                     visible: running
                 }
                 
@@ -230,7 +226,8 @@ PanelWindow {
                     anchors.centerIn: parent
                     text: "No wallpapers found"
                     color: Theme.currentTheme.textDim
-                    visible: !backend.wallpapers.loading && grid.count === 0
+                    visible: backend && backend.wallpapers && 
+                             !backend.wallpapers.loading && grid.count === 0
                     font.pixelSize: 18
                 }
             }
@@ -265,13 +262,13 @@ PanelWindow {
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
-                            // Backend doesn't have explicit random function exposed yet, 
-                            // but we can execute the script with 'random'
-                            // Or implement logic here to pick random from list
-                            var randomIndex = Math.floor(Math.random() * backend.wallpapers.filteredWallpapers.length)
-                            var randomWp = backend.wallpapers.filteredWallpapers[randomIndex]
-                            if (randomWp) {
-                                backend.wallpapers.applyWallpaper(randomWp.path)
+                            if (backend && backend.wallpapers && 
+                                backend.wallpapers.filteredWallpapers.length > 0) {
+                                var randomIndex = Math.floor(Math.random() * backend.wallpapers.filteredWallpapers.length)
+                                var randomWp = backend.wallpapers.filteredWallpapers[randomIndex]
+                                if (randomWp) {
+                                    backend.wallpapers.applyWallpaper(randomWp.path)
+                                }
                             }
                         }
                     }

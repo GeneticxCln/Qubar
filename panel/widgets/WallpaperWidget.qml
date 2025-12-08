@@ -1,13 +1,13 @@
 import QtQuick
 import QtQuick.Layouts
-import "../../../theme"
-import "../../../modules/common/widgets"
-import "../../../" // For GlobalStates
+import "../../theme"
 
 Item {
     id: root
-    width: 250
+    width: parent.width
     height: 60
+    
+    signal openWallpaperPicker()
     
     Rectangle {
         anchors.fill: parent
@@ -30,6 +30,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: "🎨"
+                    font.pixelSize: 18
                 }
             }
             
@@ -40,6 +41,7 @@ Item {
                 Text {
                     text: "Wallpaper"
                     color: Theme.currentTheme.textPrimary
+                    font.family: Theme.currentTheme.fontFamily
                     font.bold: true
                 }
                 
@@ -53,7 +55,7 @@ Item {
         
         MouseArea {
             anchors.fill: parent
-            onClicked: GlobalStates.wallpaperPickerVisible = true
+            onClicked: root.openWallpaperPicker()
             cursorShape: Qt.PointingHandCursor
         }
     }

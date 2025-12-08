@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import "../../theme"
-import "../../modules/common/widgets" // For RippleButton if available, or just use basic MouseArea
 
 Item {
     id: root
@@ -26,6 +25,7 @@ Item {
         radius: Theme.currentTheme.cornerRadius
         border.width: 1
         border.color: hoverHandler.hovered ? Theme.currentTheme.accent : "transparent"
+        clip: true
         
         Behavior on border.color { ColorAnimation { duration: 150 } }
         
@@ -38,27 +38,26 @@ Item {
             anchors.bottom: nameBg.top
             anchors.margins: 2
             
-            source: root.modelData.path
+            source: "file://" + root.modelData.path
             sourceSize.width: 300 // Downscale for performance
             sourceSize.height: 200
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
             cache: true
             
-            layer.enabled: true
-            layer.effect: OpacityMask {
-                maskSource: Rectangle {
-                    width: thumbnail.width
-                    height: thumbnail.height
-                    radius: Theme.currentTheme.cornerRadius - 2
-                }
-            }
-            
             // Loading indicator
             BusyIndicator {
                 anchors.centerIn: parent
                 running: thumbnail.status === Image.Loading
                 visible: running
+            }
+            
+            // Error state
+            Text {
+                anchors.centerIn: parent
+                text: "⚠️"
+                font.pixelSize: 24
+                visible: thumbnail.status === Image.Error
             }
         }
         
@@ -68,13 +67,8 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            anchors.margins: 1
             height: 36
-            color: "transparent"
-            radius: Theme.currentTheme.cornerRadius
-            
-            // Bottom rounded corners only logic is complex in pure Rectangle, 
-            // so we rely on the container clipping or just use standardized radius.
+            color: Qt.rgba(0, 0, 0, 0.5)
         }
         
         // Name Label
@@ -101,24 +95,5 @@ Item {
             onClicked: root.clicked()
             cursorShape: Qt.PointingHandCursor
         }
-        
-        // Checkmark for current wallpaper (optional, if we could track it)
-        /*
-        Rectangle {
-            anchors.top: parent.top
-            anchors.right: parent.right
-            width: 24
-            height: 24
-            radius: 12
-            color: Theme.currentTheme.accent
-            visible: root.backend.wallpapers.currentWallpaper === root.modelData.path
-            
-            Text {
-                anchors.centerIn: parent
-                text: "✓"
-                color: Theme.currentTheme.background
-            }
-        }
-        */
     }
 }
