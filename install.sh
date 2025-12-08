@@ -1,319 +1,264 @@
 #!/bin/bash
-# ╔═══════════════════════════════════════════════════════════╗
-# ║                  QUBAR AUTO-INSTALLER                     ║
-# ║          Automated setup for Qubar Desktop Environment    ║
-# ╚═══════════════════════════════════════════════════════════╝
-
-set -e  # Exit on error
-
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Script directory
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 # ═══════════════════════════════════════════════════════════
-# FUNCTIONS
+# QUBAR - Main Installer
+# Complete installation script for Qubar desktop environment
 # ═══════════════════════════════════════════════════════════
 
-print_header() {
-    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  $1${NC}"
-    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-}
+set -e
 
-print_success() {
-    echo -e "${GREEN}✓${NC} $1"
-}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-print_error() {
-    echo -e "${RED}✗${NC} $1"
-}
+# Source global functions
+if [ -f "$SCRIPT_DIR/install-scripts/global_functions.sh" ]; then
+    source "$SCRIPT_DIR/install-scripts/global_functions.sh"
+else
+    echo "Error: global_functions.sh not found!"
+    exit 1
+fi
 
-print_warning() {
-    echo -e "${YELLOW}⚠${NC} $1"
-}
+# ═══════════════════════════════════════════════════════════
+# PACKAGE LISTS
+# ═══════════════════════════════════════════════════════════
 
-print_info() {
-    echo -e "${BLUE}ℹ${NC} $1"
-}
+core_pkgs=(
+    hyprland
+    hyprpaper
+    hyprlock
+    xdg-desktop-portal-hyprland
+    xdg-desktop-portal-gtk
+    polkit-kde-agent
+)
 
-# Check if running on Arch Linux
-check_distro() {
-    if [ ! -f /etc/arch-release ]; then
-        print_error "This installer is currently only for Arch Linux"
-        print_info "Detected distro: $(cat /etc/os-release | grep '^NAME=' | cut -d'=' -f2)"
-        exit 1
-    fi
-    print_success "Arch Linux detected"
-}
+shell_pkgs=(
+    qt6-declarative
+    qt6-5compat
+    quickshell-git
+)
 
-# Check for existing configs
-check_existing_configs() {
-    local has_existing=false
-    
-    if [ -d "$HOME/.config/quickshell" ]; then
-        print_warning "Existing QuickShell config found at ~/.config/quickshell"
-        has_existing=true
-    fi
-    
-    if [ -d "$HOME/.config/hypr" ]; then
-        print_warning "Existing Hyprland config found at ~/.config/hypr"
-        has_existing=true
-    fi
-    
-    if [ "$has_existing" = true ]; then
-        echo ""
-        read -p "Do you want to backup existing configs before proceeding? (y/n): " -n 1 -r
-        echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            print_info "Creating backup..."
-            if [ -f "$SCRIPT_DIR/scripts/backup-config.sh" ]; then
-                bash "$SCRIPT_DIR/scripts/backup-config.sh"
-            else
-                # Manual backup if script doesn't exist
-                BACKUP_DIR="$HOME/qubar-backups"
-                TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-                mkdir -p "$BACKUP_DIR"
-                [ -d "$HOME/.config/quickshell" ] && cp -r "$HOME/.config/quickshell" "$BACKUP_DIR/quickshell-$TIMESTAMP"
-                [ -d "$HOME/.config/hypr" ] && cp -r "$HOME/.config/hypr" "$BACKUP_DIR/hypr-$TIMESTAMP"
-                print_success "Backup created in $BACKUP_DIR"
-            fi
-        fi
-        
-        echo ""
-        read -p "Continue with installation? This will OVERWRITE existing configs (y/n): " -n 1 -r
-        echo ""
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            print_info "Installation cancelled"
-            exit 0
-        fi
-    fi
-}
+system_pkgs=(
+    brightnessctl
+    gammastep
+    wlogout
+    wallust
+    pipewire
+    wireplumber
+    libnotify
+    grim
+    slurp
+    swappy
+)
 
-# Install dependencies
-install_dependencies() {
-    print_header "Installing Dependencies"
-    
-    # Core dependencies
-    local CORE_DEPS=(
-        "hyprland"
-        "quickshell"
-        "qt6-declarative"
-        "qt6-svg"
-    )
-    
-    # System tools
-    local SYSTEM_DEPS=(
-        "wpctl"
-        "brightnessctl"
-        "networkmanager"
-        "bluez-utils"
-        "playerctl"
-    )
-    
-    # Wayland tools
-    local WAYLAND_DEPS=(
-        "xdg-desktop-portal-hyprland"
-        "xdg-desktop-portal-gtk"
-        "hyprpaper"
-        "swaylock-effects"
-        "hyprshot"
-    )
-    
-    # Optional but recommended
-    local OPTIONAL_DEPS=(
-        "sddm"
-        "dunst"
-        "polkit-kde-agent"
-    )
-    
-    # Combine all deps
-    local ALL_DEPS=("${CORE_DEPS[@]}" "${SYSTEM_DEPS[@]}" "${WAYLAND_DEPS[@]}" "${OPTIONAL_DEPS[@]}")
-    
-    echo "The following packages will be installed:"
-    printf '  - %s\n' "${ALL_DEPS[@]}"
-    echo ""
-    
-    read -p "Proceed with installation? (y/n): " -n 1 -r
-    echo ""
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_warning "Skipping dependency installation"
-        print_warning "Some features may not work without required packages"
-        return
-    fi
-    
-    print_info "Installing packages via pacman..."
-    sudo pacman -S --needed --noconfirm "${ALL_DEPS[@]}"
-    
-    if [ $? -eq 0 ]; then
-        print_success "Dependencies installed successfully"
-    else
-        print_error "Some packages failed to install"
-        print_warning "Continuing anyway..."
-    fi
-}
+apps_pkgs=(
+    kitty
+    thunar
+    thunar-archive-plugin
+    firefox
+    cava
+)
 
-# Deploy configs
-deploy_configs() {
-    print_header "Deploying Configurations"
-    
-    # Create necessary directories
-    mkdir -p "$HOME/.config/quickshell"
-    mkdir -p "$HOME/.config/hypr"
-    mkdir -p "$HOME/.config/swaylock"
-    mkdir -p "$HOME/.config/xdg-desktop-portal"
-    
-    # Copy QuickShell configs
-    print_info "Copying QuickShell configs..."
-    cp -r "$SCRIPT_DIR"/!(hypr|hyprland.conf|.git|wallpapers|scripts|docs|.config|install*.sh|sddm.conf|README.md|LICENSE|*.rules|*.json|*.qml|plan) "$HOME/.config/quickshell/" 2>/dev/null || true
-    
-    # Copy main QML files
-    if [ -f "$SCRIPT_DIR/shell.qml" ]; then
-        cp -r "$SCRIPT_DIR"/*.qml "$HOME/.config/quickshell/" 2>/dev/null || true
-    fi
-    
-    # Copy all module directories
-    for dir in backend topbar panel launcher overview theme modules services; do
-        if [ -d "$SCRIPT_DIR/$dir" ]; then
-            cp -r "$SCRIPT_DIR/$dir" "$HOME/.config/quickshell/" 2>/dev/null || true
-        fi
-    done
-    
-    print_success "QuickShell configs deployed"
-    
-    # Copy Hyprland config (modular)
-    print_info "Copying Hyprland config..."
-    if [ -f "$SCRIPT_DIR/hypr/qubar.conf" ]; then
-        cp "$SCRIPT_DIR/hypr/qubar.conf" "$HOME/.config/hypr/hyprland.conf"
-        cp -r "$SCRIPT_DIR/hypr/modules" "$HOME/.config/hypr/" 2>/dev/null || true
-        cp -r "$SCRIPT_DIR/hypr/user" "$HOME/.config/hypr/" 2>/dev/null || true
-    elif [ -f "$SCRIPT_DIR/hyprland.conf" ]; then
-        # Fallback to old single file
-        cp "$SCRIPT_DIR/hyprland.conf" "$HOME/.config/hypr/"
-    fi
-    print_success "Hyprland config deployed"
-    
-    # Copy Swaylock config
-    if [ -d "$SCRIPT_DIR/.config/swaylock" ]; then
-        print_info "Copying Swaylock config..."
-        cp -r "$SCRIPT_DIR/.config/swaylock"/* "$HOME/.config/swaylock/" 2>/dev/null || true
-        print_success "Swaylock config deployed"
-    fi
-    
-    # Copy XDG portal config
-    if [ -d "$SCRIPT_DIR/.config/xdg-desktop-portal" ]; then
-        print_info "Copying XDG portal config..."
-        cp -r "$SCRIPT_DIR/.config/xdg-desktop-portal"/* "$HOME/.config/xdg-desktop-portal/" 2>/dev/null || true
-        print_success "XDG portal config deployed"
-    fi
-    
-    # Copy wallpapers (if they exist and user wants them)
-    if [ -d "$SCRIPT_DIR/wallpapers" ]; then
-        echo ""
-        read -p "Copy wallpapers? (~1.1GB) (y/n): " -n 1 -r
-        echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            print_info "Copying wallpapers (this may take a while)..."
-            mkdir -p "$HOME/Qubar/wallpapers"
-            cp -r "$SCRIPT_DIR/wallpapers"/* "$HOME/Qubar/wallpapers/" 2>/dev/null || true
-            print_success "Wallpapers copied"
-        fi
-    fi
-    
-    # Copy scripts
-    if [ -d "$SCRIPT_DIR/scripts" ]; then
-        print_info "Copying scripts..."
-        mkdir -p "$HOME/Qubar/scripts"
-        cp -r "$SCRIPT_DIR/scripts"/* "$HOME/Qubar/scripts/" 2>/dev/null || true
-        chmod +x "$HOME/Qubar/scripts"/*.sh 2>/dev/null || true
-        print_success "Scripts deployed"
-    fi
-}
+fonts_pkgs=(
+    ttf-jetbrains-mono-nerd
+    ttf-font-awesome
+    noto-fonts
+    noto-fonts-emoji
+)
 
-# SDDM setup
-setup_sddm() {
-    echo ""
-    read -p "Install SDDM login manager? (requires sudo) (y/n): " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        if [ -f "$SCRIPT_DIR/install-sddm-theme.sh" ]; then
-            print_info "Running SDDM installer..."
-            sudo bash "$SCRIPT_DIR/install-sddm-theme.sh"
-        else
-            print_warning "SDDM installer script not found, skipping"
-        fi
-    fi
-}
-
-# Post-install setup
-post_install() {
-    print_header "Post-Installation Setup"
-    
-    # Set initial wallpaper
-    if [ -f "$HOME/Qubar/scripts/set-wallpaper.sh" ] && [ -d "$HOME/Qubar/wallpapers" ]; then
-        print_info "Setting initial wallpaper..."
-        bash "$HOME/Qubar/scripts/set-wallpaper.sh" random 2>/dev/null || true
-    fi
-    
-    print_success "Post-install complete"
-}
+optional_pkgs=(
+    swaylock
+    wl-clipboard
+    cliphist
+    pamixer
+    playerctl
+)
 
 # ═══════════════════════════════════════════════════════════
 # MAIN INSTALLATION
 # ═══════════════════════════════════════════════════════════
 
 main() {
-    clear
-    print_header "Qubar Desktop Environment Installer"
-    echo ""
-    echo "This script will install Qubar, a QuickShell-based"
-    echo "desktop environment for Hyprland."
+    check_not_root
+    print_logo
+    
+    echo -e "${INFO} Welcome to the ${MAGENTA}Qubar${RESET} installer!"
+    echo -e "${INFO} This will install and configure your Hyprland desktop."
     echo ""
     
-    # Run checks
-    check_distro
-    check_existing_configs
+    # Check for AUR helper
+    if [ -z "$ISAUR" ]; then
+        echo -e "${WARN} No AUR helper found!"
+        if ask_yes_no "Would you like to install yay?"; then
+            install_yay
+        else
+            echo -e "${ERROR} An AUR helper is required. Exiting."
+            exit 1
+        fi
+    fi
     
-    # Install
-    echo ""
-    install_dependencies
-    echo ""
-    deploy_configs
-    echo ""
-    setup_sddm
-    echo ""
-    post_install
-    
-    # Success message
-    echo ""
-    print_header "Installation Complete!"
-    echo ""
-    print_success "Qubar has been installed successfully!"
-    echo ""
-    echo "Next steps:"
-    echo "  1. Review configs in ~/.config/quickshell and ~/.config/hypr"
-    echo "  2. Customize user overrides in ~/.config/hypr/user/"
-    echo "  3. Start Hyprland: 'Hyprland' or reboot if using SDDM"
-    echo ""
-    echo "Useful commands:"
-    echo "  - Backup configs: ~/Qubar/scripts/backup-config.sh"
-    echo "  - Change wallpaper: ~/Qubar/scripts/set-wallpaper.sh random"
-    echo ""
-    echo "Documentation: https://github.com/GeneticxCln/Qubar"
+    echo -e "${INFO} Using AUR helper: ${YELLOW}$ISAUR${RESET}"
     echo ""
     
-    read -p "Start Hyprland now? (y/n): " -n 1 -r
+    # Component selection
+    INSTALL_NVIDIA=false
+    INSTALL_MONITORS=false
+    INSTALL_ZSH=false
+    
+    if ask_yes_no "Install NVIDIA drivers?" "n"; then
+        INSTALL_NVIDIA=true
+    fi
+    
+    if ask_yes_no "Install system monitors (battery, temp, disk)?" "y"; then
+        INSTALL_MONITORS=true
+    fi
+    
+    if ask_yes_no "Install ZSH with Oh My Zsh?" "n"; then
+        INSTALL_ZSH=true
+    fi
+    
     echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        print_info "Starting Hyprland..."
-        exec Hyprland
+    echo -e "${ACTION} Starting installation..."
+    echo ""
+    
+    LOG="$LOG_DIR/install-$(date +%Y%m%d_%H%M%S).log"
+    
+    # Install packages
+    print_section "Core Packages"
+    install_packages "$LOG" "${core_pkgs[@]}"
+    
+    print_section "QuickShell"
+    install_packages "$LOG" "${shell_pkgs[@]}"
+    
+    print_section "System Utilities"
+    install_packages "$LOG" "${system_pkgs[@]}"
+    
+    print_section "Applications"
+    install_packages "$LOG" "${apps_pkgs[@]}"
+    
+    print_section "Fonts"
+    install_packages "$LOG" "${fonts_pkgs[@]}"
+    
+    print_section "Optional Tools"
+    install_packages "$LOG" "${optional_pkgs[@]}"
+    
+    # NVIDIA setup
+    if [ "$INSTALL_NVIDIA" = true ]; then
+        bash "$SCRIPT_DIR/install-scripts/nvidia.sh"
+    fi
+    
+    # System monitors
+    if [ "$INSTALL_MONITORS" = true ]; then
+        bash "$SCRIPT_DIR/install-scripts/battery-monitor.sh"
+        bash "$SCRIPT_DIR/install-scripts/temp-monitor.sh"
+        bash "$SCRIPT_DIR/install-scripts/disk-monitor.sh"
+    fi
+    
+    # ZSH setup
+    if [ "$INSTALL_ZSH" = true ]; then
+        bash "$SCRIPT_DIR/install-scripts/zsh.sh"
+    fi
+    
+    # Copy dotfiles
+    print_section "Copying Configuration Files"
+    copy_dotfiles
+    
+    # Setup SDDM theme
+    print_section "SDDM Theme"
+    if ask_yes_no "Setup SDDM login theme?" "y"; then
+        bash "$SCRIPT_DIR/install-scripts/sddm-theme.sh"
+    fi
+    
+    # Final steps
+    print_section "Installation Complete!"
+    
+    echo -e "${OK} Qubar has been installed successfully!"
+    echo ""
+    echo -e "${INFO} Configuration files copied to:"
+    echo -e "    ${YELLOW}~/.config/quickshell${RESET}"
+    echo -e "    ${YELLOW}~/.config/hypr${RESET}"
+    echo -e "    ${YELLOW}~/.config/kitty${RESET}"
+    echo ""
+    echo -e "${INFO} To start Hyprland, log out and select it from your login manager."
+    echo -e "${INFO} Or run: ${YELLOW}Hyprland${RESET}"
+    echo ""
+    
+    if [ "$INSTALL_NVIDIA" = true ]; then
+        echo -e "${WARN} Please ${YELLOW}reboot${RESET} for NVIDIA drivers to take effect!"
+    fi
+    
+    echo -e "${INFO} Check logs at: ${YELLOW}$LOG_DIR${RESET}"
+    echo ""
+    echo -e "${MAGENTA}Thank you for using Qubar! 🚀${RESET}"
+}
+
+# ═══════════════════════════════════════════════════════════
+# HELPER FUNCTIONS
+# ═══════════════════════════════════════════════════════════
+
+install_yay() {
+    echo -e "${NOTE} Installing yay..."
+    sudo pacman -S --needed --noconfirm git base-devel
+    
+    cd /tmp
+    rm -rf yay
+    git clone https://aur.archlinux.org/yay.git
+    cd yay
+    makepkg -si --noconfirm
+    cd -
+    
+    ISAUR="yay"
+    echo -e "${OK} yay installed successfully!"
+}
+
+copy_dotfiles() {
+    # Create directories
+    ensure_dir "$HOME/.config/quickshell"
+    ensure_dir "$HOME/.config/hypr"
+    ensure_dir "$HOME/.config/kitty"
+    ensure_dir "$HOME/.config/cava"
+    ensure_dir "$HOME/.config/Thunar"
+    ensure_dir "$HOME/.config/wlogout"
+    
+    # Copy QuickShell config
+    if [ -d "$SCRIPT_DIR/backend" ]; then
+        cp -r "$SCRIPT_DIR/backend" "$HOME/.config/quickshell/"
+        cp -r "$SCRIPT_DIR/topbar" "$HOME/.config/quickshell/"
+        cp -r "$SCRIPT_DIR/launcher" "$HOME/.config/quickshell/"
+        cp -r "$SCRIPT_DIR/panel" "$HOME/.config/quickshell/"
+        cp -r "$SCRIPT_DIR/theme" "$HOME/.config/quickshell/"
+        cp -r "$SCRIPT_DIR/modules" "$HOME/.config/quickshell/"
+        cp "$SCRIPT_DIR/shell.qml" "$HOME/.config/quickshell/"
+        echo -e "${OK} Copied QuickShell configuration"
+    fi
+    
+    # Copy Hyprland config
+    if [ -d "$SCRIPT_DIR/hypr" ]; then
+        cp -r "$SCRIPT_DIR/hypr/"* "$HOME/.config/hypr/"
+        echo -e "${OK} Copied Hyprland configuration"
+    fi
+    
+    # Copy app configs
+    if [ -d "$SCRIPT_DIR/.config" ]; then
+        cp -r "$SCRIPT_DIR/.config/kitty/"* "$HOME/.config/kitty/" 2>/dev/null || true
+        cp -r "$SCRIPT_DIR/.config/cava/"* "$HOME/.config/cava/" 2>/dev/null || true
+        cp -r "$SCRIPT_DIR/.config/Thunar/"* "$HOME/.config/Thunar/" 2>/dev/null || true
+        cp -r "$SCRIPT_DIR/.config/wlogout/"* "$HOME/.config/wlogout/" 2>/dev/null || true
+        echo -e "${OK} Copied application configurations"
+    fi
+    
+    # Copy scripts
+    if [ -d "$SCRIPT_DIR/scripts" ]; then
+        ensure_dir "$HOME/.config/qubar/scripts"
+        cp -r "$SCRIPT_DIR/scripts/"* "$HOME/.config/qubar/scripts/"
+        chmod +x "$HOME/.config/qubar/scripts/"*.sh
+        echo -e "${OK} Copied utility scripts"
+    fi
+    
+    # Copy wallpapers
+    if [ -d "$SCRIPT_DIR/wallpapers" ]; then
+        ensure_dir "$HOME/Pictures/wallpapers"
+        cp -r "$SCRIPT_DIR/wallpapers/"* "$HOME/Pictures/wallpapers/"
+        echo -e "${OK} Copied wallpapers"
     fi
 }
 
-# Run main function
-main
+# Run main
+main "$@"
