@@ -1,0 +1,60 @@
+/* ╔═══════════════════════════════════════════════════════════╗
+   ║                QUBAR WLOGOUT THEME                        ║
+   ║            Matching Qubar dark aesthetic                  ║
+   ╚═══════════════════════════════════════════════════════════╝ */
+
+* {
+    background-image: none;
+    box-shadow: none;
+}
+
+window {
+    background-color: rgba(10, 10, 12, 0.9);
+}
+
+button {
+    border-radius: 10px;
+    border: 2px solid rgba(129, 161, 193, 0.3);
+    background-color: rgba(32, 34, 40, 0.8);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 25%;
+    margin: 20px;
+    transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+    background-color: rgba(50, 52, 60, 0.95);
+    border-color: rgba(129, 161, 193, 0.8);
+    transform: scale(1.05);
+}
+
+button:focus {
+    background-color: rgba(129, 161, 193, 0.2);
+    border-color: rgba(129, 161, 193, 1.0);
+    outline: none;
+}
+
+#lock {
+    background-image: image(url("/usr/share/wlogout/icons/lock.png"));
+}
+
+#logout {
+    background-image: image(url("/usr/share/wlogout/icons/logout.png"));
+}
+
+#suspend {
+    background-image: image(url("/usr/share/wlogout/icons/suspend.png"));
+}
+
+#hibernate {
+    background-image: image(url("/usr/share/wlogout/icons/hibernate.png"));
+}
+
+#reboot {
+    background-image: image(url("/usr/share/wlogout/icons/reboot.png"));
+}
+
+#shutdown {
+    background-image: image(url("/usr/share/wlogout/icons/shutdown.png"));
+}

@@ -52,6 +52,12 @@ sudo pacman -S xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
 # Wallpaper daemon
 sudo pacman -S hyprpaper
 
+# Screenshot tools
+sudo pacman -S hyprshot swappy
+
+# Logout menu
+sudo pacman -S wlogout
+
 # Screen locker
 sudo pacman -S swaylock-effects
 
