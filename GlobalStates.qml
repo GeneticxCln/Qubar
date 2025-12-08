@@ -10,4 +10,6 @@ Singleton {
     property bool notificationPanelVisible: false
     property bool settingsPanelVisible: false
     property bool wallpaperPickerVisible: false
+    property bool emojiPickerVisible: false
+    property bool clipboardPanelVisible: false
 }

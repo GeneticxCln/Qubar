@@ -82,6 +82,48 @@ ShellRoot {
         }
     }
     
+    // Emoji Picker
+    Loader {
+        id: emojiPickerLoader
+        active: GlobalStates.emojiPickerVisible
+        source: "./panel/EmojiPicker.qml"
+        
+        onLoaded: {
+            item.backend = qubarBackend
+            item.visible = Qt.binding(() => GlobalStates.emojiPickerVisible)
+        }
+        
+        Connections {
+            target: emojiPickerLoader.item
+            function onVisibleChanged() {
+                if (emojiPickerLoader.item && !emojiPickerLoader.item.visible) {
+                    GlobalStates.emojiPickerVisible = false
+                }
+            }
+        }
+    }
+    
+    // Clipboard Manager
+    Loader {
+        id: clipboardPanelLoader
+        active: GlobalStates.clipboardPanelVisible
+        source: "./panel/ClipboardPanel.qml"
+        
+        onLoaded: {
+            item.backend = qubarBackend
+            item.visible = Qt.binding(() => GlobalStates.clipboardPanelVisible)
+        }
+        
+        Connections {
+            target: clipboardPanelLoader.item
+            function onVisibleChanged() {
+                if (clipboardPanelLoader.item && !clipboardPanelLoader.item.visible) {
+                    GlobalStates.clipboardPanelVisible = false
+                }
+            }
+        }
+    }
+    
     // ═══════════════════════════════════════════════════════════
     // OVERVIEW
     // ═══════════════════════════════════════════════════════════
