@@ -1,0 +1,261 @@
+@import url("colors.css");
+
+/* ═══════════════════════════════════════════════════════════
+ * THUNAR FILE MANAGER - Qubar Theme
+ * ═══════════════════════════════════════════════════════════ */
+
+/* Global Window */
+window {
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+}
+
+/* Toolbar */
+.thunar-toolbar,
+toolbar {
+    background-color: #181825;
+    border: none;
+    box-shadow: none;
+    padding: 4px 8px;
+}
+
+.thunar-toolbar button,
+toolbar button {
+    background-color: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: #cdd6f4;
+}
+
+.thunar-toolbar button:hover,
+toolbar button:hover {
+    background-color: rgba(203, 166, 247, 0.2);
+}
+
+.thunar-toolbar button:active,
+toolbar button:active {
+    background-color: #cba6f7;
+    color: #1e1e2e;
+}
+
+/* Sidebar / Location */
+.thunar-location-bar,
+.thunar-location-buttons {
+    background-color: #181825;
+}
+
+.thunar-side-pane,
+.sidebar {
+    background-color: #11111b;
+    border-right: 1px solid #313244;
+}
+
+.thunar-side-pane row,
+.sidebar row {
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin: 2px 6px;
+}
+
+.thunar-side-pane row:hover,
+.sidebar row:hover {
+    background-color: rgba(203, 166, 247, 0.15);
+}
+
+.thunar-side-pane row:selected,
+.sidebar row:selected {
+    background-color: #cba6f7;
+    color: #1e1e2e;
+}
+
+/* Main View */
+.thunar-standard-view,
+.view {
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+}
+
+.view:selected {
+    background-color: #cba6f7;
+    color: #1e1e2e;
+}
+
+/* Icon View */
+iconview {
+    background-color: #1e1e2e;
+}
+
+iconview:selected {
+    background-color: #cba6f7;
+    outline: none;
+}
+
+iconview:hover {
+    background-color: rgba(203, 166, 247, 0.1);
+}
+
+/* Tree View (List View) */
+treeview {
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+}
+
+treeview header button {
+    background-color: #181825;
+    color: #a6adc8;
+    border: none;
+    border-bottom: 1px solid #313244;
+    padding: 8px 12px;
+}
+
+treeview:selected {
+    background-color: #cba6f7;
+    color: #1e1e2e;
+}
+
+treeview:hover {
+    background-color: rgba(203, 166, 247, 0.1);
+}
+
+/* Scrollbars */
+scrollbar {
+    background-color: #11111b;
+}
+
+scrollbar slider {
+    background-color: #45475a;
+    border-radius: 10px;
+    min-width: 8px;
+    min-height: 8px;
+}
+
+scrollbar slider:hover {
+    background-color: #585b70;
+}
+
+scrollbar slider:active {
+    background-color: #cba6f7;
+}
+
+/* Status Bar */
+.thunar-statusbar,
+statusbar {
+    background-color: #181825;
+    color: #a6adc8;
+    border-top: 1px solid #313244;
+    padding: 4px 12px;
+}
+
+/* Path Bar */
+.path-bar,
+.breadcrumb {
+    background-color: #181825;
+}
+
+.path-bar button {
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #cdd6f4;
+    padding: 4px 8px;
+}
+
+.path-bar button:hover {
+    background-color: rgba(203, 166, 247, 0.2);
+}
+
+/* Search */
+searchbar {
+    background-color: #313244;
+    border-radius: 8px;
+    padding: 4px 12px;
+}
+
+searchbar entry {
+    background-color: transparent;
+    border: none;
+    color: #cdd6f4;
+}
+
+/* Context Menu */
+menu {
+    background-color: #1e1e2e;
+    border: 1px solid #313244;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+menu menuitem {
+    padding: 6px 12px;
+    border-radius: 4px;
+    color: #cdd6f4;
+}
+
+menu menuitem:hover {
+    background-color: #cba6f7;
+    color: #1e1e2e;
+}
+
+menu separator {
+    background-color: #313244;
+    margin: 4px 8px;
+}
+
+/* Dialogs */
+dialog {
+    background-color: #1e1e2e;
+}
+
+dialog button {
+    background-color: #313244;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    color: #cdd6f4;
+}
+
+dialog button:hover {
+    background-color: rgba(203, 166, 247, 0.3);
+}
+
+dialog button.suggested-action {
+    background-color: #cba6f7;
+    color: #1e1e2e;
+}
+
+dialog button.destructive-action {
+    background-color: #f38ba8;
+    color: #1e1e2e;
+}
+
+/* Tooltips */
+tooltip {
+    background-color: #313244;
+    color: #cdd6f4;
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+/* File Emblems */
+.thunar-emblem-chooser {
+    background-color: #1e1e2e;
+}
+
+/* Tab Bar (if using tabs) */
+notebook tab {
+    background-color: #181825;
+    border: none;
+    padding: 8px 16px;
+    color: #a6adc8;
+}
+
+notebook tab:checked {
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+    border-bottom: 2px solid #cba6f7;
+}
+
+notebook tab:hover {
+    background-color: rgba(203, 166, 247, 0.1);
+}

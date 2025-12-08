@@ -39,12 +39,20 @@ The installer will:
 ### Manual Installation
 
 #### Prerequisites
+
 ```bash
-# Core dependencies
-sudo pacman -S hyprland quickshell qt6-declarative
+# Core
+yay -S quickshell-git hyprland hyprpaper
 
 # System tools
-sudo pacman -S wpctl brightnessctl networkmanager bluez-utils playerctl
+yay -S brightnessctl gammastep swappy wlogout swaylock hyprlock wallust
+
+# Terminal & File Manager
+yay -S kitty thunar thunar-archive-plugin
+
+# Fonts
+yay -S ttf-jetbrains-mono-nerd ttf-font-awesome
+```
 
 # XDG Desktop Portal (for screen sharing, file pickers)
 sudo pacman -S xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
