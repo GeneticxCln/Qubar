@@ -81,6 +81,15 @@ PopupWindow {
         // Separator
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.textDim; opacity: 0.2 }
         
+        // APPEARANCE WIDGET
+        widgets.AppearanceWidget {
+            Layout.fillWidth: true
+            backend: settingsPanel.backend
+        }
+        
+        // Separator
+        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.textDim; opacity: 0.2 }
+        
         // 2. QUICK TOGGLES (Grid)
         GridLayout {
             Layout.fillWidth: true

@@ -118,6 +118,11 @@ QtObject {
     property alias audio: audioController
     property alias display: displayController
     property alias network: networkController
+    property alias appearance: appearanceController
+    
+    settings.AppearanceController {
+        id: appearanceController
+    }
     property alias bluetooth: bluetoothController
     property alias power: powerController
     
