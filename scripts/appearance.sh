@@ -84,6 +84,59 @@ case "$1" in
         ;;
     
     # ═══════════════════════════════════════════════════════════
+    # ANIMATION STYLE PRESETS
+    # ═══════════════════════════════════════════════════════════
+    animation-style)
+        ANIMATIONS_DIR="$HOME/Qubar/hypr/animations"
+        USER_ANIM_FILE="$HOME/Qubar/hypr/user/animations.conf"
+        
+        case "$2" in
+            default|minimal|dynamic|vertical|fast|smooth|popin|disabled)
+                # Copy preset to user animations
+                cp "$ANIMATIONS_DIR/$2.conf" "$USER_ANIM_FILE"
+                # Reload hyprland config
+                hyprctl reload
+                echo "Animation style set to: $2"
+                ;;
+            list)
+                echo "Available animation styles:"
+                ls -1 "$ANIMATIONS_DIR" | sed 's/.conf$//'
+                ;;
+            *)
+                echo "Unknown style: $2"
+                echo "Available: default, minimal, dynamic, vertical, fast, smooth, popin, disabled"
+                exit 1
+                ;;
+        esac
+        ;;
+    
+    get-animation-style)
+        USER_ANIM_FILE="$HOME/Qubar/hypr/user/animations.conf"
+        if [ -f "$USER_ANIM_FILE" ]; then
+            # Try to determine style from file content
+            if grep -q "enabled = no" "$USER_ANIM_FILE" 2>/dev/null; then
+                echo "disabled"
+            elif grep -q "bounce" "$USER_ANIM_FILE" 2>/dev/null; then
+                echo "dynamic"
+            elif grep -q "quick, popin" "$USER_ANIM_FILE" 2>/dev/null; then
+                echo "minimal"
+            elif grep -q "slidevert" "$USER_ANIM_FILE" 2>/dev/null && grep -q "easeOut" "$USER_ANIM_FILE" 2>/dev/null; then
+                echo "vertical"
+            elif grep -q "instant" "$USER_ANIM_FILE" 2>/dev/null; then
+                echo "fast"
+            elif grep -q "silk" "$USER_ANIM_FILE" 2>/dev/null; then
+                echo "smooth"
+            elif grep -q "popin 50%" "$USER_ANIM_FILE" 2>/dev/null; then
+                echo "popin"
+            else
+                echo "default"
+            fi
+        else
+            echo "default"
+        fi
+        ;;
+    
+    # ═══════════════════════════════════════════════════════════
     # BORDER CONTROLS
     # ═══════════════════════════════════════════════════════════
     border-rainbow)

@@ -26,6 +26,19 @@ QtObject {
     // Animation settings
     property bool animationsEnabled: true
     property string animationSpeed: "normal" // "fast", "normal", "slow"
+    property string animationStyle: "default" // "default", "minimal", "dynamic", "vertical", "fast", "smooth", "popin", "disabled"
+    
+    // Available animation styles
+    readonly property var animationStyles: [
+        { id: "default", name: "Default", icon: "✨", desc: "Balanced, smooth" },
+        { id: "minimal", name: "Minimal", icon: "◽", desc: "Subtle, quick" },
+        { id: "dynamic", name: "Dynamic", icon: "🎯", desc: "Bouncy, energetic" },
+        { id: "vertical", name: "Vertical", icon: "↕️", desc: "Vertical slides" },
+        { id: "fast", name: "Fast", icon: "⚡", desc: "Ultra responsive" },
+        { id: "smooth", name: "Smooth", icon: "🌊", desc: "Buttery cinematic" },
+        { id: "popin", name: "Popin", icon: "💫", desc: "Scale from center" },
+        { id: "disabled", name: "Disabled", icon: "⏹️", desc: "No animations" }
+    ]
     
     // Border settings
     property string borderStyle: "rainbow" // "rainbow", "accent", "solid"
@@ -82,6 +95,20 @@ QtObject {
     function setAnimationSpeed(speed) {
         animationSpeed = speed
         runCommand("animation-speed", speed)
+    }
+    
+    function setAnimationStyle(style) {
+        animationStyle = style
+        if (style === "disabled") {
+            animationsEnabled = false
+        } else {
+            animationsEnabled = true
+        }
+        runCommand("animation-style", style)
+    }
+    
+    function getAnimationStyle() {
+        getStyleProcess.running = true
     }
     
     function setBorderStyle(style) {

@@ -164,69 +164,117 @@ Item {
                 id: animContent
                 anchors.fill: parent
                 anchors.margins: 10
-                spacing: 8
+                spacing: 10
                 
-                // Animations Toggle
-                RowLayout {
-                    Layout.fillWidth: true
-                    
-                    Text {
-                        text: "✨ Animations"
-                        color: Theme.textPrimary
-                        font.family: Theme.fontFamily
-                    }
-                    
-                    Item { Layout.fillWidth: true }
-                    
-                    Switch {
-                        checked: backend && backend.appearance ? backend.appearance.animationsEnabled : true
-                        onCheckedChanged: {
-                            if (backend && backend.appearance) {
-                                backend.appearance.setAnimations(checked)
-                            }
-                        }
-                    }
+                // Header
+                Text {
+                    text: "✨ Animation Style"
+                    color: Theme.textPrimary
+                    font.family: Theme.fontFamily
+                    font.bold: true
                 }
                 
-                // Animation Speed
-                RowLayout {
-                    Layout.fillWidth: true
-                    visible: backend && backend.appearance && backend.appearance.animationsEnabled
-                    spacing: 8
-                    
-                    Text {
-                        text: "Speed"
-                        color: Theme.textSecondary
-                        font.pixelSize: Theme.fontSizeSmall
+                // Subtitle showing current style
+                Text {
+                    text: {
+                        if (backend && backend.appearance) {
+                            var style = backend.appearance.animationStyle
+                            var styles = backend.appearance.animationStyles
+                            for (var i = 0; i < styles.length; i++) {
+                                if (styles[i].id === style) {
+                                    return "Current: " + styles[i].name + " - " + styles[i].desc
+                                }
+                            }
+                        }
+                        return "Current: Default"
                     }
+                    color: Theme.textSecondary
+                    font.pixelSize: Theme.fontSizeSmall
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+                
+                // Animation Styles Grid - 2 columns
+                GridLayout {
+                    Layout.fillWidth: true
+                    columns: 2
+                    rowSpacing: 8
+                    columnSpacing: 8
                     
                     Repeater {
-                        model: ["fast", "normal", "slow"]
+                        model: backend && backend.appearance ? backend.appearance.animationStyles : []
                         
                         Rectangle {
-                            width: 60
-                            height: 28
-                            radius: 14
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 50
+                            radius: 8
                             
                             property bool isActive: backend && backend.appearance && 
-                                                   backend.appearance.animationSpeed === modelData
+                                                   backend.appearance.animationStyle === modelData.id
                             
                             color: isActive ? Theme.accent : Theme.background
                             border.width: 1
                             border.color: isActive ? Theme.accent : Theme.textDim
                             
-                            Text {
-                                anchors.centerIn: parent
-                                text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
-                                color: parent.isActive ? "#ffffff" : Theme.textSecondary
-                                font.pixelSize: Theme.fontSizeSmall
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.margins: 8
+                                spacing: 8
+                                
+                                // Icon
+                                Text {
+                                    text: modelData.icon
+                                    font.pixelSize: 20
+                                    Layout.preferredWidth: 28
+                                }
+                                
+                                // Name and description
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 2
+                                    
+                                    Text {
+                                        text: modelData.name
+                                        color: parent.parent.parent.isActive ? "#ffffff" : Theme.textPrimary
+                                        font.pixelSize: Theme.fontSizeSmall
+                                        font.bold: true
+                                    }
+                                    
+                                    Text {
+                                        text: modelData.desc
+                                        color: parent.parent.parent.isActive ? "rgba(255,255,255,0.7)" : Theme.textDim
+                                        font.pixelSize: 10
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
+                                }
                             }
                             
                             MouseArea {
                                 anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     if (backend && backend.appearance) {
-                                        backend.appearance.setAnimationSpeed(modelData)
+                                        backend.appearance.setAnimationStyle(modelData.id)
+                                    }
+                                }
+                            }
+                            
+                            // Hover effect
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: parent.radius
+                                color: "white"
+                                opacity: hoverArea.containsMouse ? 0.1 : 0
+                                
+                                MouseArea {
+                                    id: hoverArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: {
+                                        if (backend && backend.appearance) {
+                                            backend.appearance.setAnimationStyle(modelData.id)
+                                        }
                                     }
                                 }
                             }
