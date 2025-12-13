@@ -26,19 +26,26 @@ QtObject {
         if (capturing) return
         capturing = true
         
-        var filename = outputDir + "/window_" + address.replace("0x", "") + ".png"
+        var cleanAddress = address.replace("0x", "")
+        var filename = outputDir + "/window_" + cleanAddress + ".png"
         
         // Use hyprshot for Hyprland
-        var proc = Qt.createQmlObject(`
-            import Quickshell.Io
-            Process {
-                command: ["sh", "-c", "mkdir -p ${outputDir} && hyprctl dispatch focuswindow address:${address} && sleep 0.1 && hyprshot -m window -o ${outputDir} -f window_${address.replace('0x', '')}.png --silent"]
-            }
-        `, screenshotProvider)
+        var proc = Qt.createQmlObject('\
+            import Quickshell.Io\n\
+            Process { running: false }\
+        ', screenshotProvider)
         
-        proc.finished.connect(function() {
+        proc.command = ["sh", "-c", "mkdir -p " + outputDir + " && hyprctl dispatch focuswindow address:" + address + " && sleep 0.1 && hyprshot -m window -o " + outputDir + " -f window_" + cleanAddress + ".png --silent"]
+        
+        proc.error.connect(function(msg) {
             capturing = false
-            if (proc.exitCode === 0) {
+            if (callback) callback("")
+            proc.destroy()
+        })
+        
+        proc.exited.connect(function(code, status) {
+            capturing = false
+            if (code === 0) {
                 windowScreenshots[address] = filename
                 screenshotCaptured(filename)
                 if (callback) callback(filename)
@@ -49,24 +56,32 @@ QtObject {
             proc.destroy()
         })
         
-        proc.start()
+        proc.running = true
     }
     
     function captureWindowWithGrim(address, callback) {
         capturing = true
         
-        var filename = outputDir + "/window_" + address.replace("0x", "") + ".png"
+        var cleanAddress = address.replace("0x", "")
+        var filename = outputDir + "/window_" + cleanAddress + ".png"
         
-        var proc = Qt.createQmlObject(`
-            import Quickshell.Io
-            Process {
-                command: ["sh", "-c", "mkdir -p ${outputDir} && hyprctl clients -j | jq -r '.[] | select(.address==\"${address}\") | \"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"' | xargs -I {} grim -g '{}' ${filename}"]
-            }
-        `, screenshotProvider)
+        var proc = Qt.createQmlObject('\
+            import Quickshell.Io\n\
+            Process { running: false }\
+        ', screenshotProvider)
         
-        proc.finished.connect(function() {
+        proc.command = ["sh", "-c", "mkdir -p " + outputDir + " && hyprctl clients -j | jq -r '.[] | select(.address==\"" + address + "\") | \"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"' | xargs -I {} grim -g '{}' " + filename]
+        
+        proc.error.connect(function(msg) {
             capturing = false
-            if (proc.exitCode === 0) {
+            error("Failed to capture window")
+            if (callback) callback("")
+            proc.destroy()
+        })
+        
+        proc.exited.connect(function(code, status) {
+            capturing = false
+            if (code === 0) {
                 windowScreenshots[address] = filename
                 screenshotCaptured(filename)
                 if (callback) callback(filename)
@@ -77,7 +92,7 @@ QtObject {
             proc.destroy()
         })
         
-        proc.start()
+        proc.running = true
     }
     
     function captureWorkspace(workspaceId, callback) {
@@ -86,16 +101,23 @@ QtObject {
         
         var filename = outputDir + "/workspace_" + workspaceId + ".png"
         
-        var proc = Qt.createQmlObject(`
-            import Quickshell.Io
-            Process {
-                command: ["sh", "-c", "mkdir -p ${outputDir} && hyprctl dispatch workspace ${workspaceId} && sleep 0.2 && grim ${filename}"]
-            }
-        `, screenshotProvider)
+        var proc = Qt.createQmlObject('\
+            import Quickshell.Io\n\
+            Process { running: false }\
+        ', screenshotProvider)
         
-        proc.finished.connect(function() {
+        proc.command = ["sh", "-c", "mkdir -p " + outputDir + " && hyprctl dispatch workspace " + workspaceId + " && sleep 0.2 && grim " + filename]
+        
+        proc.error.connect(function(msg) {
             capturing = false
-            if (proc.exitCode === 0) {
+            error("Failed to capture workspace")
+            if (callback) callback("")
+            proc.destroy()
+        })
+        
+        proc.exited.connect(function(code, status) {
+            capturing = false
+            if (code === 0) {
                 workspaceScreenshots[workspaceId] = filename
                 screenshotCaptured(filename)
                 if (callback) callback(filename)
@@ -106,7 +128,7 @@ QtObject {
             proc.destroy()
         })
         
-        proc.start()
+        proc.running = true
     }
     
     function captureScreen(callback) {
@@ -116,16 +138,23 @@ QtObject {
         var timestamp = Date.now()
         var filename = outputDir + "/screen_" + timestamp + ".png"
         
-        var proc = Qt.createQmlObject(`
-            import Quickshell.Io
-            Process {
-                command: ["sh", "-c", "mkdir -p ${outputDir} && grim ${filename}"]
-            }
-        `, screenshotProvider)
+        var proc = Qt.createQmlObject('\
+            import Quickshell.Io\n\
+            Process { running: false }\
+        ', screenshotProvider)
         
-        proc.finished.connect(function() {
+        proc.command = ["sh", "-c", "mkdir -p " + outputDir + " && grim " + filename]
+        
+        proc.error.connect(function(msg) {
             capturing = false
-            if (proc.exitCode === 0) {
+            error("Failed to capture screen")
+            if (callback) callback("")
+            proc.destroy()
+        })
+        
+        proc.exited.connect(function(code, status) {
+            capturing = false
+            if (code === 0) {
                 screenshotCaptured(filename)
                 if (callback) callback(filename)
             } else {
@@ -135,7 +164,7 @@ QtObject {
             proc.destroy()
         })
         
-        proc.start()
+        proc.running = true
     }
     
     function getWindowScreenshot(address) {
@@ -150,14 +179,13 @@ QtObject {
         windowScreenshots = {}
         workspaceScreenshots = {}
         
-        var proc = Qt.createQmlObject(`
-            import Quickshell.Io
-            Process {
-                command: ["rm", "-rf", "${outputDir}"]
-            }
-        `, screenshotProvider)
-        proc.finished.connect(function() { proc.destroy() })
-        proc.start()
+        var proc = Qt.createQmlObject('\
+            import Quickshell.Io\n\
+            Process { running: false }\
+        ', screenshotProvider)
+        proc.command = ["rm", "-rf", outputDir]
+        proc.exited.connect(function() { proc.destroy() })
+        proc.running = true
     }
     
     // ═══════════════════════════════════════════════════════════
@@ -167,12 +195,13 @@ QtObject {
     function initialize() {
         console.log("[ScreenshotProvider] Initializing...")
         // Ensure output directory exists
-        var proc = Qt.createQmlObject(`
-            import Quickshell.Io
-            Process { command: ["mkdir", "-p", "${outputDir}"] }
-        `, screenshotProvider)
-        proc.finished.connect(function() { proc.destroy() })
-        proc.start()
+        var proc = Qt.createQmlObject('\
+            import Quickshell.Io\n\
+            Process { running: false }\
+        ', screenshotProvider)
+        proc.command = ["mkdir", "-p", outputDir]
+        proc.exited.connect(function() { proc.destroy() })
+        proc.running = true
     }
     
     Component.onCompleted: {

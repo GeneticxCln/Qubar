@@ -15,7 +15,7 @@ QtObject {
     // ═══════════════════════════════════════════════════════════
     // PROPERTIES
     // ═══════════════════════════════════════════════════════════
-    property string wallpaperDir: Quickshell.env("HOME") + "/Qubar/wallpapers"
+    property string wallpaperDir: Qt.getenv("HOME") + "/Qubar/wallpapers"
     property string currentWallpaper: wallpaperDir + "/current.jpg"
     
     property var wallpapers: []           // Array of wallpaper objects
@@ -82,7 +82,7 @@ QtObject {
         
         // Call set-wallpaper.sh script
         applyProcess.command = [
-            Quickshell.env("HOME") + "/Qubar/scripts/set-wallpaper.sh",
+            Qt.getenv("HOME") + "/Qubar/scripts/set-wallpaper.sh",
             path
         ]
         applyProcess.running = true

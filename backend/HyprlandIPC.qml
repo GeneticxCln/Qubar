@@ -138,41 +138,60 @@ QtObject {
     // Query Hyprland (returns via callback)
     function query(request, callback) {
         // Use Process for query since we need response
-        var proc = Qt.createQmlObject(`
-            import Quickshell.Io
-            Process {
-                command: ["hyprctl", "-j", "${request}"]
-                running: true
-            }
-        `, hyprlandIPC)
+        var proc = Qt.createQmlObject('\
+            import Quickshell.Io\n\
+            Process {\
+                property var callback\
+                running: false\
+            }\
+        ', hyprlandIPC)
         
-        proc.finished.connect(function() {
+        proc.command = ["hyprctl", "-j", request]
+        proc.callback = callback
+        
+        // Handle process errors to prevent memory leaks
+        proc.error.connect(function(msg) {
+            logError("[HyprlandIPC] Query process error: " + msg)
+            proc.callback("Process error: " + msg, null)
+            proc.destroy()
+        })
+        
+        proc.exited.connect(function(code, status) {
+            if (code !== 0) {
+                proc.callback("Process exited with code " + code, null)
+                proc.destroy()
+                return
+            }
+            
             try {
-                var result = JSON.parse(proc.stdout)
-                callback(null, result)
+                var result = JSON.parse(proc.stdout())
+                proc.callback(null, result)
             } catch (e) {
-                callback("Failed to parse response: " + e.message, null)
+                proc.callback("Failed to parse response: " + e.message, null)
             }
             proc.destroy()
         })
+        
+        proc.running = true
     }
     
     // Synchronous query using hyprctl
     function querySync(request) {
         // This is a blocking call - use sparingly
         var result = null
-        var proc = Qt.createQmlObject(`
+        var proc = Qt.createQmlObject('
             import Quickshell.Io
             Process {
-                command: ["hyprctl", "-j", "${request}"]
+                running: false
             }
-        `, hyprlandIPC)
+        ', hyprlandIPC)
         
+        proc.command = ["hyprctl", "-j", request]
         proc.start()
         proc.waitForFinished()
         
         try {
-            result = JSON.parse(proc.stdout)
+            result = JSON.parse(proc.stdout())
         } catch (e) {
             console.error("[HyprlandIPC] Query parse error:", e.message)
         }
@@ -186,8 +205,19 @@ QtObject {
     // ═══════════════════════════════════════════════════════════
     
     function parseEvents(rawData) {
+        // Validate input
+        if (!rawData) {
+            logWarn("[HyprlandIPC] Received empty/null event data")
+            return
+        }
+        
         try {
-            var lines = rawData.toString().trim().split("\n")
+            var dataStr = rawData.toString()
+            if (!dataStr || dataStr.trim().length === 0) {
+                return
+            }
+            
+            var lines = dataStr.trim().split("\n")
             
             for (var i = 0; i < lines.length; i++) {
                 var line = lines[i].trim()
@@ -195,9 +225,17 @@ QtObject {
                 
                 // Hyprland events format: "eventname>>data"
                 var separatorIndex = line.indexOf(">>")
-                if (separatorIndex === -1) continue
+                if (separatorIndex === -1) {
+                    logDebug("[HyprlandIPC] Skipping malformed event line: " + line.substring(0, 50))
+                    continue
+                }
                 
                 var eventType = line.substring(0, separatorIndex)
+                if (!eventType) {
+                    logDebug("[HyprlandIPC] Empty event type, skipping")
+                    continue
+                }
+                
                 var eventData = line.substring(separatorIndex + 2)
                 
                 logDebug("[HyprlandIPC] Event: " + eventType + " Data: " + eventData)

@@ -51,15 +51,20 @@ QtObject {
         }
         
         // Try harder with locate command
-        var proc = Qt.createQmlObject(`
-            import Quickshell.Io
-            Process {
-                command: ["sh", "-c", "find /usr/share/icons -name '${name}.*' -type f 2>/dev/null | head -1"]
-            }
-        `, iconProvider)
+        var proc = Qt.createQmlObject('\
+            import Quickshell.Io\n\
+            Process { running: false }\n\
+        ', iconProvider)
         
-        proc.finished.connect(function() {
-            var result = proc.stdout.trim()
+        proc.command = ["sh", "-c", "find /usr/share/icons -name '" + name + ".*' -type f 2>/dev/null | head -1"]
+        
+        proc.error.connect(function(msg) {
+            callback("")
+            proc.destroy()
+        })
+        
+        proc.exited.connect(function(code, status) {
+            var result = proc.stdout().trim()
             if (result) {
                 cache[name + "_" + preferredSize] = result
                 callback(result)
@@ -68,7 +73,8 @@ QtObject {
             }
             proc.destroy()
         })
-        proc.start()
+        
+        proc.running = true
     }
     
     // ═══════════════════════════════════════════════════════════
@@ -128,7 +134,7 @@ QtObject {
         command: ["gsettings", "get", "org.gnome.desktop.interface", "icon-theme"]
         
         onFinished: {
-            var theme = stdout.trim().replace(/'/g, "")
+            var theme = stdout().trim().replace(/'/g, "")
             if (theme) {
                 iconProvider.themeName = theme
                 console.log("[IconProvider] Detected theme:", theme)

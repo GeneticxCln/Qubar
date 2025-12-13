@@ -4,8 +4,35 @@
 # Modifies Hyprland decoration settings on the fly
 # ═══════════════════════════════════════════════════════════
 
-DECORATIONS_FILE="$HOME/Qubar/hypr/modules/decorations.conf"
-USER_SETTINGS_FILE="$HOME/Qubar/hypr/user/user-settings.conf"
+set -euo pipefail
+
+# Input validation helpers
+validate_numeric() {
+    local value="$1"
+    local min="$2"
+    local max="$3"
+    local name="$4"
+    
+    if ! [[ "$value" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+        echo "Error: $name must be a number"
+        exit 1
+    fi
+    
+    if (( $(echo "$value < $min" | bc -l) )) || (( $(echo "$value > $max" | bc -l) )); then
+        echo "Error: $name must be between $min and $max"
+        exit 1
+    fi
+}
+
+validate_hex() {
+    local value="$1"
+    if ! [[ "$value" =~ ^[0-9a-fA-F]{6}$ ]]; then
+        echo "Error: Color must be a valid 6-character hex code (without #)"
+        exit 1
+    fi
+}
+
+USER_SETTINGS_FILE="${HOME}/Qubar/hypr/user/user-settings.conf"
 
 # Ensure user settings file exists
 mkdir -p "$(dirname "$USER_SETTINGS_FILE")"
@@ -100,7 +127,7 @@ case "$1" in
                 ;;
             list)
                 echo "Available animation styles:"
-                ls -1 "$ANIMATIONS_DIR" | sed 's/.conf$//'
+                find "$ANIMATIONS_DIR" -maxdepth 1 -name '*.conf' -printf '%f\n' | sed 's/.conf$//'
                 ;;
             *)
                 echo "Unknown style: $2"

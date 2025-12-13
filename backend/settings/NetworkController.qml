@@ -73,7 +73,7 @@ QtObject {
         
         onFinished: {
             var networks = []
-            var lines = stdout.trim().split("\n")
+            var lines = stdout().trim().split("\n")
             for (var i = 0; i < lines.length; i++) {
                 var parts = lines[i].split(":")
                 if (parts.length >= 4 && parts[0]) {
@@ -115,15 +115,18 @@ QtObject {
                 console.log("[NetworkController] Connected successfully")
                 refresh()
             } else {
-                error("Failed to connect: " + stderr)
+                error("Failed to connect: " + stderr())
             }
         }
     }
     
+    // Track detected wifi interface
+    property string wifiInterface: "wlan0"  // Will be updated dynamically
+    
     // Disconnect
     Process {
         id: wifiDisconnectProcess
-        command: ["nmcli", "device", "disconnect", "wlan0"]
+        command: ["nmcli", "device", "disconnect", networkController.wifiInterface]
         
         onFinished: {
             networkController.connected = false
@@ -132,12 +135,42 @@ QtObject {
         }
     }
     
+    // Detect WiFi interface
+    Process {
+        id: detectInterfaceProcess
+        command: ["nmcli", "-t", "-f", "TYPE,DEVICE", "device"]
+        
+        onFinished: {
+            var lines = stdout().trim().split("\n")
+            for (var i = 0; i < lines.length; i++) {
+                var parts = lines[i].split(":")
+                if (parts[0] === "wifi" && parts[1]) {
+                    networkController.wifiInterface = parts[1]
+                    console.log("[NetworkController] Detected WiFi interface:", parts[1])
+                    break
+                }
+            }
+        }
+    }
+    
     // Toggle WiFi
     Process {
         id: wifiToggleProcess
         
         onFinished: {
-            networkController.wifiEnabled = !networkController.wifiEnabled
+            // Query actual state instead of blindly toggling
+            checkWifiStateProcess.start()
+        }
+    }
+    
+    // Check actual WiFi radio state
+    Process {
+        id: checkWifiStateProcess
+        command: ["nmcli", "radio", "wifi"]
+        
+        onFinished: {
+            var state = stdout().trim()
+            networkController.wifiEnabled = (state === "enabled")
             refresh()
         }
     }
@@ -149,7 +182,7 @@ QtObject {
         
         onFinished: {
             var vpns = []
-            var lines = stdout.trim().split("\n")
+            var lines = stdout().trim().split("\n")
             for (var i = 0; i < lines.length; i++) {
                 var parts = lines[i].split(":")
                 if (parts.length >= 3 && parts[1].includes("vpn")) {
@@ -178,6 +211,7 @@ QtObject {
     
     function initialize() {
         console.log("[NetworkController] Initializing...")
+        detectInterfaceProcess.start()  // Detect wifi interface first
         refresh()
     }
     

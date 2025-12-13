@@ -70,10 +70,12 @@ Item {
         running: cavaWidget.visible
         command: ["cava", "-p", cavaConfigPath]
         
-        property string cavaConfigPath: Quickshell.env("HOME") + "/.config/cava/config_bar"
+        property string cavaConfigPath: Qt.getenv("HOME") + "/.config/cava/config_bar"
         
-        onStdoutChanged: {
-            parseCavaOutput(stdout())
+        onExited: (code, status) => {
+            if (code === 0) {
+                parseCavaOutput(stdout())
+            }
         }
     }
     

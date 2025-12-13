@@ -26,7 +26,7 @@ QtObject {
     property bool loading: false
     
     // File paths
-    readonly property string dataDir: Quickshell.env("HOME") + "/.local/share/qubar"
+    readonly property string dataDir: Qt.getenv("HOME") + "/.local/share/qubar"
     readonly property string favoritesFile: dataDir + "/favorites.json"
     readonly property string statsFile: dataDir + "/launch_stats.json"
     
@@ -277,9 +277,8 @@ QtObject {
     
     function saveFavorites() {
         var favList = favoriteApps.map(a => a.desktopFile)
-        var json = JSON.stringify(favList, null, 2)
-        saveFileProcess.command = ["bash", "-c", "mkdir -p " + dataDir + " && echo '" + json + "' > " + favoritesFile]
-        saveFileProcess.running = true
+        saveFavoritesProcess.stdin = JSON.stringify(favList, null, 2)
+        saveFavoritesProcess.start()
     }
     
     function loadFavorites() {
@@ -291,9 +290,8 @@ QtObject {
             counts: launchCounts,
             lastLaunched: lastLaunched
         }
-        var json = JSON.stringify(stats, null, 2)
-        saveStatsProcess.command = ["bash", "-c", "mkdir -p " + dataDir + " && echo '" + json + "' > " + statsFile]
-        saveStatsProcess.running = true
+        saveStatsProcess.stdin = JSON.stringify(stats, null, 2)
+        saveStatsProcess.start()
     }
     
     function loadStats() {
@@ -354,25 +352,40 @@ QtObject {
     
     function parseIndividualFile(filePath, resultsArray) {
         // Create inline parser for each file
-        var proc = Qt.createQmlObject(`
-            import QtQuick
-            import Quickshell.Io
-            Process {
-                property string filePath: ""
-                running: false
-            }
-        `, appLauncher)
+        var proc = Qt.createQmlObject('\
+            import QtQuick\n\
+            import Quickshell.Io\n\
+            Process {\
+                property string filePath: ""\
+                running: false\
+            }\
+        ', appLauncher)
         
         proc.filePath = filePath
         proc.command = ["cat", filePath]
         
-        proc.exited.connect(function(code, status) {
-            if (code === 0) {
-                var app = parseDesktopEntry(proc.stdout(), filePath)
-                if (app) {
-                    parsedApps.push(app)
-                }
+        // Handle process errors
+        proc.error.connect(function(msg) {
+            console.warn("[AppLauncher] Process error for:", filePath, msg)
+            pendingParseCount--
+            if (pendingParseCount <= 0) {
+                finishLoading()
             }
+            proc.destroy()
+        })
+        
+        proc.exited.connect(function(code, status) {
+            try {
+                if (code === 0) {
+                    var app = parseDesktopEntry(proc.stdout(), filePath)
+                    if (app) {
+                        parsedApps.push(app)
+                    }
+                }
+            } catch (e) {
+                console.warn("[AppLauncher] Parse error for:", filePath, e.message)
+            }
+            
             pendingParseCount--
             
             if (pendingParseCount <= 0) {
@@ -458,7 +471,7 @@ QtObject {
     
     Process {
         id: loadProcess
-        command: ["find", "/usr/share/applications", Quickshell.env("HOME") + "/.local/share/applications",
+        command: ["find", "/usr/share/applications", Qt.getenv("HOME") + "/.local/share/applications",
                   "-maxdepth", "1", "-name", "*.desktop", "-type", "f"]
         running: false
         
@@ -490,13 +503,27 @@ QtObject {
     }
     
     Process {
-        id: saveFileProcess
+        id: saveFavoritesProcess
+        command: ["bash", "-c", "mkdir -p " + appLauncher.dataDir + " && tee " + appLauncher.favoritesFile]
         running: false
+        
+        onExited: (code, status) => {
+            if (code === 0) {
+                console.log("[AppLauncher] Favorites saved")
+            }
+        }
     }
     
     Process {
         id: saveStatsProcess
+        command: ["bash", "-c", "mkdir -p " + appLauncher.dataDir + " && tee " + appLauncher.statsFile]
         running: false
+        
+        onExited: (code, status) => {
+            if (code === 0) {
+                console.log("[AppLauncher] Stats saved")
+            }
+        }
     }
     
     Process {
@@ -514,6 +541,8 @@ QtObject {
                     console.log("[AppLauncher] No favorites file or invalid")
                 }
             }
+            appLauncher._favoritesLoaded = true
+            appLauncher._checkInitComplete()
         }
     }
     
@@ -533,20 +562,28 @@ QtObject {
                     console.log("[AppLauncher] No stats file or invalid")
                 }
             }
+            appLauncher._statsLoaded = true
+            appLauncher._checkInitComplete()
         }
     }
     
-    // ═══════════════════════════════════════════════════════════
-    // INITIALIZATION
-    // ═══════════════════════════════════════════════════════════
+    // Track initialization state
+    property bool _statsLoaded: false
+    property bool _favoritesLoaded: false
     
     function initialize() {
         console.log("[AppLauncher] Initializing...")
+        _statsLoaded = false
+        _favoritesLoaded = false
         loadStats()
         loadFavorites()
-        
-        // Small delay to let stats/favorites load first
-        Qt.callLater(loadApplications)
+    }
+    
+    function _checkInitComplete() {
+        if (_statsLoaded && _favoritesLoaded) {
+            console.log("[AppLauncher] Stats and favorites loaded, now loading apps...")
+            loadApplications()
+        }
     }
     
     Component.onCompleted: {

@@ -99,7 +99,7 @@ QtObject {
         
         onFinished: {
             try {
-                var data = JSON.parse(stdout)
+                var data = JSON.parse(stdout())
                 if (Array.isArray(data)) {
                     var parsed = data.map(function(n, idx) {
                         return {
@@ -130,7 +130,7 @@ QtObject {
         
         onFinished: {
             try {
-                var data = JSON.parse(stdout)
+                var data = JSON.parse(stdout())
                 if (data && data.data && Array.isArray(data.data[0])) {
                     var parsed = data.data[0].map(function(n, idx) {
                         return {

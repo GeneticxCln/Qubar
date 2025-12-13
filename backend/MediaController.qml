@@ -78,15 +78,24 @@ QtObject {
     // ═══════════════════════════════════════════════════════════
     
     function runCommand(cmd) {
-        var proc = Qt.createQmlObject(`
-            import Quickshell.Io
-            Process { command: ["sh", "-c", "${cmd}"] }
-        `, mediaController)
-        proc.finished.connect(function() {
+        var proc = Qt.createQmlObject('\
+            import Quickshell.Io\n\
+            Process { running: false }\n\
+        ', mediaController)
+        
+        proc.command = ["sh", "-c", cmd]
+        
+        proc.error.connect(function(msg) {
+            console.warn("[MediaController] Command error:", msg)
+            proc.destroy()
+        })
+        
+        proc.exited.connect(function(code, status) {
             refresh()
             proc.destroy()
         })
-        proc.start()
+        
+        proc.running = true
     }
     
     // ═══════════════════════════════════════════════════════════
@@ -99,7 +108,7 @@ QtObject {
         command: ["playerctl", "status"]
         
         onFinished: {
-            var out = stdout.trim().toLowerCase()
+            var out = stdout().trim().toLowerCase()
             if (out === "playing" || out === "paused" || out === "stopped") {
                 mediaController.status = out
             } else {
@@ -116,7 +125,7 @@ QtObject {
                   "{{playerName}}|||{{title}}|||{{artist}}|||{{album}}|||{{mpris:artUrl}}|||{{position}}|||{{mpris:length}}"]
         
         onFinished: {
-            var parts = stdout.trim().split("|||")
+            var parts = stdout().trim().split("|||")
             if (parts.length >= 5) {
                 mediaController.playerName = parts[0] || ""
                 mediaController.title = parts[1] || ""

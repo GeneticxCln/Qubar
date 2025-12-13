@@ -146,10 +146,10 @@ QtObject {
         onFinished: {
             if (exitCode === 0 && stdout.trim()) {
                 try {
-                    var loaded = JSON.parse(stdout)
+                    var loadedData = JSON.parse(stdout)
                     
                     // Merge with defaults to handle version upgrades
-                    stateManager.state = Object.assign({}, stateManager.state, loaded)
+                    stateManager.state = Object.assign({}, stateManager.state, loadedData)
                     stateManager.loaded = true
                     stateManager.dirty = false
                     

@@ -15,7 +15,7 @@ ListView {
     clip: true
     
     // Filter windows for current workspace
-    model: backend.windows.filter(w => w.workspaceId === backend.activeWorkspaceId || w.pinned)
+    model: (backend.windowList || []).filter(w => w.workspaceId === backend.activeWorkspaceId || w.pinned)
     
     delegate: Item {
         // Tab dimensions

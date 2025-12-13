@@ -65,10 +65,11 @@ QtObject {
         
         onFinished: {
             // Output: "Volume: 0.50" or "Volume: 0.50 [MUTED]"
-            var match = stdout.match(/Volume:\s*([\d.]+)/)
+            var output = stdout()
+            var match = output.match(/Volume:\s*([\d.]+)/)
             if (match) {
                 audioController.volume = Math.round(parseFloat(match[1]) * 100)
-                audioController.muted = stdout.includes("[MUTED]")
+                audioController.muted = output.includes("[MUTED]")
                 volumeChanged(audioController.volume, audioController.muted)
             }
         }
@@ -85,6 +86,10 @@ QtObject {
         onFinished: {
             audioController.refresh()
         }
+        onError: (msg) => {
+            console.warn("[AudioController] Set volume error:", msg)
+            audioController.error("Failed to set volume: " + msg)
+        }
     }
     
     // Toggle/set mute
@@ -92,6 +97,10 @@ QtObject {
         id: muteProcess
         onFinished: {
             audioController.refresh()
+        }
+        onError: (msg) => {
+            console.warn("[AudioController] Mute error:", msg)
+            audioController.error("Failed to set mute: " + msg)
         }
     }
     

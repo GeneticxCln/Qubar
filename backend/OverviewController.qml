@@ -61,9 +61,9 @@ QtObject {
             grouped[i] = []
         }
         
-        var windows = windowTracker.windows || []
-        for (var j = 0; j < windows.length; j++) {
-            var win = windows[j]
+        var windowList = windowTracker.windowList || []
+        for (var j = 0; j < windowList.length; j++) {
+            var win = windowList[j]
             var wsId = win.workspaceId || 1
             if (grouped[wsId]) {
                 grouped[wsId].push(win)

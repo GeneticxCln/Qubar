@@ -4,10 +4,12 @@
 # ║          Creates timestamped backup of all configs        ║
 # ╚═══════════════════════════════════════════════════════════╝
 
+set -euo pipefail
+
 # Backup directory
-BACKUP_DIR="$HOME/qubar-backups"
+BACKUP_DIR="${HOME}/qubar-backups"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-BACKUP_FILE="$BACKUP_DIR/qubar-backup-$TIMESTAMP.tar.gz"
+BACKUP_FILE="${BACKUP_DIR}/qubar-backup-${TIMESTAMP}.tar.gz"
 
 # Colors
 GREEN='\033[0;32m'
@@ -52,9 +54,7 @@ echo ""
 
 # Create backup
 echo -e "${BLUE}Creating backup...${NC}"
-tar -czf "$BACKUP_FILE" "${EXISTING_CONFIGS[@]}" 2>/dev/null
-
-if [ $? -eq 0 ]; then
+if tar -czf "$BACKUP_FILE" "${EXISTING_CONFIGS[@]}" 2>/dev/null; then
     BACKUP_SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
     echo -e "${GREEN}Backup created successfully!${NC}"
     echo ""
@@ -63,10 +63,10 @@ if [ $? -eq 0 ]; then
     echo ""
     
     # Keep only last 5 backups
-    BACKUP_COUNT=$(ls -1 "$BACKUP_DIR"/qubar-backup-*.tar.gz 2>/dev/null | wc -l)
+    BACKUP_COUNT=$(find "$BACKUP_DIR" -maxdepth 1 -name 'qubar-backup-*.tar.gz' -type f 2>/dev/null | wc -l)
     if [ "$BACKUP_COUNT" -gt 5 ]; then
         echo "Cleaning up old backups (keeping last 5)..."
-        ls -1t "$BACKUP_DIR"/qubar-backup-*.tar.gz | tail -n +6 | xargs rm -f
+        find "$BACKUP_DIR" -maxdepth 1 -name 'qubar-backup-*.tar.gz' -type f -printf '%T@ %p\n' | sort -n | head -n -5 | cut -d' ' -f2- | xargs -r rm -f
     fi
     
     echo -e "${GREEN}Done!${NC}"

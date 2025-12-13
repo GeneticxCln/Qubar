@@ -44,20 +44,21 @@ PopupWindow {
     }
     
     // Delete item from history
+    property int _pendingDeleteIndex: -1
+    
     function deleteItem(index) {
         var item = clipboardHistory[index]
         if (item) {
+            _pendingDeleteIndex = index
             deleteProcess.command = ["cliphist", "delete-query", item.text]
             deleteProcess.running = true
-            clipboardHistory.splice(index, 1)
-            clipboardHistoryChanged()
         }
     }
     
     // Clear all history
     function clearHistory() {
         clearProcess.running = true
-        clipboardHistory = []
+        // Don't clear immediately - wait for success
     }
     
     // Processes
@@ -65,8 +66,8 @@ PopupWindow {
         id: historyLoader
         command: ["cliphist", "list"]
         
-        onRunningChanged: {
-            if (!running) {
+        onExited: (code, status) => {
+            if (code === 0) {
                 parseHistory(stdout())
             }
         }
@@ -74,8 +75,8 @@ PopupWindow {
     
     Process {
         id: copyProcess
-        onRunningChanged: {
-            if (!running) {
+        onExited: (code, status) => {
+            if (code === 0) {
                 console.log("[Clipboard] Item copied")
             }
         }
@@ -83,13 +84,24 @@ PopupWindow {
     
     Process {
         id: deleteProcess
+        
+        onExited: (code, status) => {
+            if (code === 0 && clipboardPanel._pendingDeleteIndex >= 0) {
+                var newHistory = clipboardHistory.slice()
+                newHistory.splice(clipboardPanel._pendingDeleteIndex, 1)
+                clipboardHistory = newHistory
+                console.log("[Clipboard] Item deleted")
+            }
+            clipboardPanel._pendingDeleteIndex = -1
+        }
     }
     
     Process {
         id: clearProcess
         command: ["cliphist", "wipe"]
-        onRunningChanged: {
-            if (!running) {
+        onExited: (code, status) => {
+            if (code === 0) {
+                clipboardHistory = []
                 console.log("[Clipboard] History cleared")
             }
         }
